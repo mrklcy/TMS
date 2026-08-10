@@ -17,10 +17,12 @@ export const Navbar = ({ currentTab, setCurrentTab }) => {
       <div style={{
         maxWidth: '1300px',
         margin: '0 auto',
-        padding: '0.85rem 1.5rem',
+        padding: '0.75rem 1.25rem',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.75rem'
       }}>
         {/* Brand Logo */}
         <div 
