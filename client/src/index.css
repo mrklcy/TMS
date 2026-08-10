@@ -90,15 +90,17 @@ a:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Zero-Margin Flexbox Layout Architecture */
+/* Layout Architecture */
 .app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* Mobile First Layout Wrapper: Column direction by default so mobile-header stacks on top */
 .app-layout-wrapper {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
@@ -238,9 +240,10 @@ a:hover {
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Mobile Header & Overlay */
+/* Mobile Header & Overlay: Spans full width across top on mobile */
 .mobile-header {
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem 1.25rem;
@@ -590,8 +593,12 @@ a:hover {
   }
 }
 
-/* STICKY FLEXBOX DESKTOP SIDEBAR (> 1024px) */
+/* DESKTOP FLEXBOX LAYOUT (> 1024px) */
 @media (min-width: 1025px) {
+  .app-layout-wrapper {
+    flex-direction: row; /* Switch layout to side-by-side row on desktop */
+  }
+
   .mobile-header {
     display: none !important;
   }
