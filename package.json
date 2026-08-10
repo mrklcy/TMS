@@ -1,0 +1,11 @@
+{
+  "name": "tms-root",
+  "version": "1.0.0",
+  "description": "Root runner for Task Management System MERN stack",
+  "scripts": {
+    "start": "npm start --prefix server",
+    "server": "npm start --prefix server",
+    "client": "npm run dev --prefix client",
+    "dev": "npm run dev --prefix client"
+  }
+}
