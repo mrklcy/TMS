@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TaskProvider, useTask } from './context/TaskContext';
 import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
 import { LandingHero } from './components/LandingHero';
 import { LandingFeatures } from './components/LandingFeatures';
 import { LandingWorkflow } from './components/LandingWorkflow';
@@ -15,7 +16,7 @@ import { TaskList } from './components/TaskList';
 import { TaskModal } from './components/TaskModal';
 
 const AppContent = () => {
-  const { isAuthenticated, openAuthModal } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { viewMode } = useTask();
   const [currentTab, setCurrentTab] = useState(isAuthenticated ? 'dashboard' : 'landing');
 
@@ -27,19 +28,13 @@ const AppContent = () => {
 
   return (
     <div className="app-container">
-      <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      {isAuthenticated ? (
+        <div className="app-layout-wrapper">
+          {/* Vertical Sidebar Navigation */}
+          <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
-      <main className="main-content">
-        {currentTab === 'landing' && !isAuthenticated ? (
-          <div>
-            <LandingHero onExplore={() => setCurrentTab('dashboard')} />
-            <LandingFeatures />
-            <LandingWorkflow />
-            <LandingCTA onExplore={() => setCurrentTab('dashboard')} />
-          </div>
-        ) : (
-          <div>
-            {/* Dashboard Workspace Header */}
+          {/* Main Dashboard Workspace Content */}
+          <main className="main-workspace-content">
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -54,28 +49,6 @@ const AppContent = () => {
                   Track tasks, organize subtasks, and monitor completion metrics.
                 </p>
               </div>
-
-              {!isAuthenticated && (
-                <div style={{
-                  padding: '0.6rem 1rem',
-                  borderRadius: 'var(--radius-md)',
-                  background: 'rgba(245, 158, 11, 0.12)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                  color: '#fbbf24',
-                  fontSize: '0.85rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <span>Demo Mode</span>
-                  <button
-                    onClick={() => openAuthModal('login')}
-                    className="btn btn-primary btn-sm"
-                  >
-                    Log In to Sync Database
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Dashboard Analytics Bar */}
@@ -86,11 +59,20 @@ const AppContent = () => {
 
             {/* View Mode Component (Kanban vs List) */}
             {viewMode === 'kanban' ? <KanbanBoard /> : <TaskList />}
-          </div>
-        )}
-      </main>
-
-      <Footer />
+          </main>
+        </div>
+      ) : (
+        <>
+          <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+          <main className="main-content">
+            <LandingHero onExplore={() => setCurrentTab('dashboard')} />
+            <LandingFeatures />
+            <LandingWorkflow />
+            <LandingCTA onExplore={() => setCurrentTab('dashboard')} />
+          </main>
+          <Footer />
+        </>
+      )}
 
       {/* Global Modals */}
       <AuthModal />
