@@ -171,49 +171,77 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed }) 
       <aside className={`sidebar-container ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         {/* Sidebar Header */}
         <div className="sidebar-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '12px',
-              background: 'var(--gradient-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'var(--shadow-glow)',
-              flexShrink: 0
-            }}>
-              <CheckSquare size={22} color="#ffffff" />
-            </div>
-            {!collapsed && (
-              <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
-                TaskFlow<span className="gradient-text">Pro</span>
-              </span>
-            )}
-          </div>
-
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="sidebar-toggle-btn desktop-only"
-            title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          </button>
+          {collapsed ? (
+            <>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'var(--gradient-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'var(--shadow-glow)',
+                  cursor: 'pointer'
+                }}
+                  onClick={() => setCollapsed(false)}
+                  title="Expand Sidebar"
+                >
+                  <ChevronRight size={20} color="#ffffff" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  background: 'var(--gradient-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'var(--shadow-glow)',
+                  flexShrink: 0
+                }}>
+                  <CheckSquare size={22} color="#ffffff" />
+                </div>
+                <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
+                  TaskFlow<span className="gradient-text">Pro</span>
+                </span>
+              </div>
+              <button
+                onClick={() => setCollapsed(true)}
+                className="sidebar-toggle-btn desktop-only"
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </>
+          )}
         </div>
 
         {/* New Task Action Button */}
-        <div style={{ padding: collapsed ? '0.75rem 0.65rem' : '0.75rem 1rem' }}>
+        <div style={{ padding: collapsed ? '0.6rem 0.75rem' : '0.75rem 1rem' }}>
           <button
             onClick={() => { openCreateTaskModal(); setMobileOpen(false); }}
             className="btn btn-primary"
             style={{
               width: '100%',
-              padding: collapsed ? '0.7rem 0' : '0.7rem 1rem',
+              padding: collapsed ? '0.65rem 0' : '0.7rem 1rem',
               justifyContent: 'center',
-              fontSize: '0.9rem'
+              fontSize: collapsed ? '0.8rem' : '0.9rem'
             }}
+            title={collapsed ? 'New Task' : ''}
           >
-            <PlusCircle size={18} />
+            <PlusCircle size={collapsed ? 20 : 18} />
             {!collapsed && <span>New Task</span>}
           </button>
         </div>
