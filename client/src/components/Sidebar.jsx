@@ -21,7 +21,7 @@ import {
 
 export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav }) => {
   const { user, isAuthenticated, logout } = useAuth();
-  const { viewMode, setViewMode, openCreateTaskModal, stats } = useTask();
+  const { viewMode, setViewMode, openCreateTaskModal, stats, searchQuery, setSearchQuery } = useTask();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   if (!isAuthenticated) return null;
@@ -171,33 +171,32 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
         {/* Sidebar Header */}
         <div className="sidebar-header">
           {collapsed ? (
-            <>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%'
+            }}>
               <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                background: 'var(--gradient-primary)',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'var(--gradient-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 'var(--shadow-glow)',
-                  cursor: 'pointer'
-                }}
-                  onClick={() => setCollapsed(false)}
-                  title="Expand Sidebar"
-                >
-                  <ChevronRight size={20} color="#ffffff" />
-                </div>
+                justifyContent: 'center',
+                boxShadow: 'var(--shadow-glow)',
+                cursor: 'pointer'
+              }}
+                onClick={() => setCollapsed(false)}
+                title="Expand Sidebar"
+              >
+                <ChevronRight size={20} color="#ffffff" />
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{
                   width: '38px',
@@ -212,7 +211,7 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
                 }}>
                   <CheckSquare size={22} color="#ffffff" />
                 </div>
-                <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
                   TaskFlow<span className="gradient-text">Pro</span>
                 </span>
               </div>
@@ -223,20 +222,21 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
               >
                 <ChevronLeft size={18} />
               </button>
-            </>
+            </div>
           )}
         </div>
 
         {/* New Task Action Button */}
-        <div style={{ padding: collapsed ? '0.6rem 0.75rem' : '0.75rem 1rem' }}>
+        <div style={{ padding: collapsed ? '0.6rem 0.65rem' : '0.85rem 1.15rem' }}>
           <button
             onClick={() => { openCreateTaskModal(); setMobileOpen(false); }}
             className="btn btn-primary"
             style={{
               width: '100%',
-              padding: collapsed ? '0.65rem 0' : '0.7rem 1rem',
+              padding: collapsed ? '0.65rem 0' : '0.75rem 1rem',
               justifyContent: 'center',
-              fontSize: collapsed ? '0.8rem' : '0.9rem'
+              fontSize: collapsed ? '0.8rem' : '0.9rem',
+              borderRadius: 'var(--radius-md)'
             }}
             title={collapsed ? 'New Task' : ''}
           >
@@ -245,28 +245,40 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
           </button>
         </div>
 
-        {/* Search (expanded only) */}
+        {/* Interactive Search Input (expanded only) */}
         {!collapsed && (
-          <div style={{ padding: '0 1rem 0.5rem 1rem' }}>
+          <div style={{ padding: '0 1.15rem 0.6rem 1.15rem' }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.55rem 0.75rem',
-              borderRadius: 'var(--radius-sm)',
+              gap: '0.6rem',
+              padding: '0.55rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid var(--border-subtle)',
-              color: 'var(--text-dim)',
-              fontSize: '0.85rem'
+              color: 'var(--text-muted)'
             }}>
-              <Search size={15} />
-              <span>Quick search...</span>
+              <Search size={16} color="var(--text-dim)" />
+              <input
+                type="text"
+                placeholder="Quick search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  width: '100%'
+                }}
+              />
             </div>
           </div>
         )}
 
         {/* Navigation Menu */}
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" style={{ padding: collapsed ? '0.5rem 0.4rem' : '0.5rem 0.85rem' }}>
           {/* Main Navigation */}
           <div className="sidebar-section-title">
             {!collapsed ? <span>MAIN MENU</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
@@ -332,8 +344,8 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
         </nav>
 
         {/* User Profile Footer */}
-        <div className="sidebar-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden' }}>
+        <div className="sidebar-footer" style={{ padding: collapsed ? '0.75rem 0.5rem' : '1.15rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
             <div style={{
               padding: '2px',
               background: 'var(--gradient-primary)',
@@ -344,16 +356,16 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
               <img
                 src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
                 alt={user?.name}
-                style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1e293b' }}
+                style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#1e293b' }}
               />
             </div>
 
             {!collapsed && (
               <div style={{ overflow: 'hidden', flex: 1 }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                   {user?.name}
                 </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   ● Online
                 </div>
               </div>
@@ -364,10 +376,10 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
             <button
               onClick={logout}
               className="btn btn-danger btn-sm"
-              style={{ padding: '0.4rem 0.6rem', marginTop: '0.65rem', width: '100%', justifyContent: 'center', fontSize: '0.8rem' }}
+              style={{ padding: '0.45rem 0.75rem', marginTop: '0.75rem', width: '100%', justifyContent: 'center', fontSize: '0.85rem', borderRadius: 'var(--radius-md)' }}
               title="Logout"
             >
-              <LogOut size={14} /> Sign Out
+              <LogOut size={15} /> Sign Out
             </button>
           )}
 
