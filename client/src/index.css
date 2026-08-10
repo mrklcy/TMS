@@ -97,7 +97,6 @@ a:hover {
   flex-direction: column;
 }
 
-/* Mobile First Layout Wrapper: Column direction by default so mobile-header stacks on top */
 .app-layout-wrapper {
   display: flex;
   flex-direction: column;
@@ -112,6 +111,8 @@ a:hover {
   width: 100%;
   padding: 1.2rem 1rem;
   box-sizing: border-box;
+  margin-left: 0 !important;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-content {
@@ -122,15 +123,15 @@ a:hover {
   padding: 1.5rem 1rem;
 }
 
-/* Mobile Fixed Drawer Sidebar (Default: Always off-screen on mobile whether collapsed or not) */
+/* FIXED SIDEBAR CONTAINER (Position Fixed at left edge of viewport) */
 .sidebar-container,
 .sidebar-container.collapsed {
   width: 280px;
   height: 100vh;
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
   background: rgba(9, 13, 22, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -243,7 +244,7 @@ a:hover {
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Mobile Header & Overlay: Spans full width across top on mobile */
+/* Mobile Header & Overlay */
 .mobile-header {
   display: flex;
   width: 100%;
@@ -596,12 +597,8 @@ a:hover {
   }
 }
 
-/* DESKTOP FLEXBOX LAYOUT (> 1024px) */
+/* DESKTOP FIXED SIDEBAR POSITION LAYOUT (> 1024px) */
 @media (min-width: 1025px) {
-  .app-layout-wrapper {
-    flex-direction: row; /* Switch layout to side-by-side row on desktop */
-  }
-
   .mobile-header {
     display: none !important;
   }
@@ -611,12 +608,14 @@ a:hover {
   }
 
   .sidebar-container {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    flex-shrink: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
     transform: translateX(0) !important;
     width: 260px !important;
+    z-index: 120 !important;
   }
 
   .sidebar-container.collapsed {
@@ -636,7 +635,13 @@ a:hover {
   }
 
   .main-workspace-content {
+    margin-left: 260px !important;
     padding: 2.2rem 1.8rem;
-    max-width: 1400px;
+    max-width: calc(100vw - 260px);
+  }
+
+  .main-workspace-content.sidebar-collapsed {
+    margin-left: 80px !important;
+    max-width: calc(100vw - 80px);
   }
 }
