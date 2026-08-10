@@ -12,5 +12,14 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    sourcemap: false, // Completely disables source maps so original source code is hidden in browser DevTools Sources
+    minify: 'esbuild',
+    target: 'es2015',
+    cssCodeSplit: true,
+    esbuild: {
+      drop: ['console', 'debugger'] // Removes console.log, console.warn, and debugger statements from bundle
+    }
   }
 });
