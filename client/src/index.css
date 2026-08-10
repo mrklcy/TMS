@@ -122,9 +122,10 @@ a:hover {
   padding: 1.5rem 1rem;
 }
 
-/* Mobile Fixed Drawer Sidebar (Default) */
-.sidebar-container {
-  width: 270px;
+/* Mobile Fixed Drawer Sidebar (Default: Always off-screen on mobile whether collapsed or not) */
+.sidebar-container,
+.sidebar-container.collapsed {
+  width: 280px;
   height: 100vh;
   position: fixed;
   left: 0;
@@ -142,8 +143,10 @@ a:hover {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-container.mobile-open {
+.sidebar-container.mobile-open,
+.sidebar-container.collapsed.mobile-open {
   transform: translateX(0) !important;
+  width: 280px !important;
   box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
 }
 
@@ -613,11 +616,11 @@ a:hover {
     height: 100vh;
     flex-shrink: 0;
     transform: translateX(0) !important;
-    width: 260px;
+    width: 260px !important;
   }
 
   .sidebar-container.collapsed {
-    width: 80px;
+    width: 80px !important;
   }
 
   .sidebar-container.collapsed .sidebar-nav-item {
