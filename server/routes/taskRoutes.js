@@ -9,7 +9,7 @@ let inMemoryTasks = [];
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
-// Protect all task endpoints
+// Protect all task endpoints (OWASP A01: Broken Access Control Enforcement)
 router.use(protect);
 
 // @route   GET /api/tasks
@@ -31,10 +31,12 @@ router.get('/', async (req, res) => {
       if (priority && priority !== 'all') {
         query.priority = priority;
       }
-      if (search) {
+      if (search && typeof search === 'string') {
+        // OWASP A03: Escape regex special characters to prevent regex Denial of Service (ReDoS)
+        const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         query.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } }
+          { title: { $regex: escapedSearch, $options: 'i' } },
+          { description: { $regex: escapedSearch, $options: 'i' } }
         ];
       }
 
@@ -58,7 +60,7 @@ router.get('/', async (req, res) => {
       if (priority && priority !== 'all') {
         userTasks = userTasks.filter(t => t.priority === priority);
       }
-      if (search) {
+      if (search && typeof search === 'string') {
         const q = search.toLowerCase();
         userTasks = userTasks.filter(
           t => t.title.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q))
@@ -114,18 +116,22 @@ router.post('/bulk', async (req, res) => {
       return res.status(400).json({ message: 'No tasks provided for bulk import' });
     }
 
+    if (tasks.length > 50) {
+      return res.status(400).json({ message: 'Bulk creation limit exceeded (max 50 tasks)' });
+    }
+
     const userId = req.user.id;
 
     if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const tasksToCreate = tasks.map(t => ({
         user: userId,
-        title: t.title,
-        description: t.description || '',
-        status: t.status || 'todo',
-        priority: t.priority || 'medium',
-        category: t.category || 'Work',
+        title: String(t.title || 'Untitled Task').substring(0, 200),
+        description: String(t.description || '').substring(0, 2000),
+        status: ['todo', 'in-progress', 'completed'].includes(t.status) ? t.status : 'todo',
+        priority: ['low', 'medium', 'high', 'urgent'].includes(t.priority) ? t.priority : 'medium',
+        category: String(t.category || 'Work').substring(0, 50),
         dueDate: t.dueDate ? new Date(t.dueDate) : null,
-        subtasks: t.subtasks || []
+        subtasks: Array.isArray(t.subtasks) ? t.subtasks.slice(0, 20) : []
       }));
       const created = await Task.insertMany(tasksToCreate);
       return res.status(201).json(created);
@@ -152,31 +158,35 @@ router.post('/', async (req, res) => {
     const { title, description, status, priority, category, dueDate, subtasks } = req.body;
     const userId = req.user.id;
 
-    if (!title || title.trim() === '') {
+    if (!title || String(title).trim() === '') {
       return res.status(400).json({ message: 'Task title is required' });
     }
+
+    const sanitizedTitle = String(title).substring(0, 200);
+    const sanitizedDescription = String(description || '').substring(0, 2000);
+    const sanitizedCategory = String(category || 'Work').substring(0, 50);
 
     if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const task = await Task.create({
         user: userId,
-        title,
-        description: description || '',
-        status: status || 'todo',
-        priority: priority || 'medium',
-        category: category || 'Work',
+        title: sanitizedTitle,
+        description: sanitizedDescription,
+        status: ['todo', 'in-progress', 'completed'].includes(status) ? status : 'todo',
+        priority: ['low', 'medium', 'high', 'urgent'].includes(priority) ? priority : 'medium',
+        category: sanitizedCategory,
         dueDate: dueDate ? new Date(dueDate) : null,
-        subtasks: subtasks || []
+        subtasks: Array.isArray(subtasks) ? subtasks.slice(0, 20) : []
       });
       return res.status(201).json(task);
     } else {
       const newTask = {
         id: 'mem_task_' + Date.now(),
         user: userId,
-        title,
-        description: description || '',
+        title: sanitizedTitle,
+        description: sanitizedDescription,
         status: status || 'todo',
         priority: priority || 'medium',
-        category: category || 'Work',
+        category: sanitizedCategory,
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         subtasks: subtasks || [],
         createdAt: new Date().toISOString()
@@ -191,21 +201,35 @@ router.post('/', async (req, res) => {
 });
 
 // @route   PUT /api/tasks/:id
-// @desc    Update task details
+// @desc    Update task details (OWASP A01 & Mass Assignment Protection)
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
     if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId) && mongoose.Types.ObjectId.isValid(id)) {
-      let task = await Task.findOne({ _id: id, user: userId });
-      if (!task) return res.status(404).json({ message: 'Task not found' });
+      const { title, description, status, priority, category, dueDate, subtasks } = req.body;
+      
+      const updatedFields = {};
+      if (title !== undefined) updatedFields.title = String(title).substring(0, 200);
+      if (description !== undefined) updatedFields.description = String(description).substring(0, 2000);
+      if (status !== undefined && ['todo', 'in-progress', 'completed'].includes(status)) updatedFields.status = status;
+      if (priority !== undefined && ['low', 'medium', 'high', 'urgent'].includes(priority)) updatedFields.priority = priority;
+      if (category !== undefined) updatedFields.category = String(category).substring(0, 50);
+      if (dueDate !== undefined) updatedFields.dueDate = dueDate ? new Date(dueDate) : null;
+      if (subtasks !== undefined && Array.isArray(subtasks)) updatedFields.subtasks = subtasks.slice(0, 20);
 
-      task = await Task.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+      const task = await Task.findOneAndUpdate(
+        { _id: id, user: userId },
+        { $set: updatedFields },
+        { new: true, runValidators: true }
+      );
+
+      if (!task) return res.status(404).json({ message: 'Task not found or access denied' });
       return res.json(task);
     } else {
-      const index = inMemoryTasks.findIndex(t => t.id === id);
-      if (index === -1) return res.status(404).json({ message: 'Task not found' });
+      const index = inMemoryTasks.findIndex(t => t.id === id && String(t.user) === String(userId));
+      if (index === -1) return res.status(404).json({ message: 'Task not found or access denied' });
 
       inMemoryTasks[index] = {
         ...inMemoryTasks[index],
@@ -220,7 +244,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // @route   PATCH /api/tasks/:id/toggle
-// @desc    Quick toggle status (e.g. todo/in-progress <-> completed)
+// @desc    Quick toggle status
 router.patch('/:id/toggle', async (req, res) => {
   try {
     const { id } = req.params;
@@ -234,7 +258,7 @@ router.patch('/:id/toggle', async (req, res) => {
       await task.save();
       return res.json(task);
     } else {
-      const index = inMemoryTasks.findIndex(t => t.id === id);
+      const index = inMemoryTasks.findIndex(t => t.id === id && String(t.user) === String(userId));
       if (index === -1) return res.status(404).json({ message: 'Task not found' });
 
       const currentStatus = inMemoryTasks[index].status;
@@ -247,7 +271,7 @@ router.patch('/:id/toggle', async (req, res) => {
 });
 
 // @route   DELETE /api/tasks/:id
-// @desc    Delete a task
+// @desc    Delete a task (OWASP A01 Ownership Validation)
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -255,11 +279,11 @@ router.delete('/:id', async (req, res) => {
 
     if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId) && mongoose.Types.ObjectId.isValid(id)) {
       const task = await Task.findOneAndDelete({ _id: id, user: userId });
-      if (!task) return res.status(404).json({ message: 'Task not found' });
+      if (!task) return res.status(404).json({ message: 'Task not found or access denied' });
       return res.json({ message: 'Task removed successfully', id });
     } else {
-      const index = inMemoryTasks.findIndex(t => t.id === id);
-      if (index === -1) return res.status(404).json({ message: 'Task not found' });
+      const index = inMemoryTasks.findIndex(t => t.id === id && String(t.user) === String(userId));
+      if (index === -1) return res.status(404).json({ message: 'Task not found or access denied' });
 
       inMemoryTasks = inMemoryTasks.filter(t => t.id !== id);
       return res.json({ message: 'Task removed successfully', id });
