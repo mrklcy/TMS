@@ -7,41 +7,102 @@ import {
   Kanban,
   ListFilter,
   PlusCircle,
-  Zap,
   LogOut,
   ChevronLeft,
   ChevronRight,
   Menu,
   X,
-  Sparkles
+  Clock,
+  BarChart3,
+  Settings,
+  Search,
+  Bell
 } from 'lucide-react';
 
-export const Sidebar = ({ currentTab, setCurrentTab }) => {
+export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed }) => {
   const { user, isAuthenticated, logout } = useAuth();
-  const { viewMode, setViewMode, openCreateTaskModal } = useTask();
-  const [collapsed, setCollapsed] = useState(false);
+  const { viewMode, setViewMode, openCreateTaskModal, stats } = useTask();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState('overview');
 
   if (!isAuthenticated) return null;
 
   const navItems = [
     {
-      id: 'dashboard',
-      label: 'Workspace Overview',
+      id: 'overview',
+      label: 'Dashboard',
       icon: <LayoutDashboard size={20} />,
-      action: () => { setCurrentTab('dashboard'); setMobileOpen(false); }
+      action: () => {
+        setActiveNav('overview');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
     },
     {
       id: 'kanban',
       label: 'Kanban Board',
       icon: <Kanban size={20} />,
-      action: () => { setCurrentTab('dashboard'); setViewMode('kanban'); setMobileOpen(false); }
+      action: () => {
+        setActiveNav('kanban');
+        setCurrentTab('dashboard');
+        setViewMode('kanban');
+        setMobileOpen(false);
+      }
     },
     {
       id: 'list',
-      label: 'Table List View',
+      label: 'List View',
       icon: <ListFilter size={20} />,
-      action: () => { setCurrentTab('dashboard'); setViewMode('list'); setMobileOpen(false); }
+      action: () => {
+        setActiveNav('list');
+        setCurrentTab('dashboard');
+        setViewMode('list');
+        setMobileOpen(false);
+      }
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: <BarChart3 size={20} />,
+      action: () => {
+        setActiveNav('analytics');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    }
+  ];
+
+  const quickActions = [
+    {
+      id: 'recent',
+      label: 'Recent Activity',
+      icon: <Clock size={20} />,
+      action: () => {
+        setActiveNav('recent');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: <Bell size={20} />,
+      badge: stats?.urgent || 0,
+      action: () => {
+        setActiveNav('notifications');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <Settings size={20} />,
+      action: () => {
+        setActiveNav('settings');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
     }
   ];
 
@@ -74,13 +135,27 @@ export const Sidebar = ({ currentTab, setCurrentTab }) => {
           </div>
         </div>
 
-        {/* Compact User Info */}
+        {/* Mobile right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img
-            src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
-            alt={user?.name}
-            style={{ width: '28px', height: '28px', borderRadius: '50%', border: '2px solid var(--accent-primary)' }}
-          />
+          <button
+            onClick={() => { openCreateTaskModal(); }}
+            className="btn btn-primary btn-sm"
+            style={{ padding: '0.35rem 0.65rem' }}
+          >
+            <PlusCircle size={16} />
+          </button>
+          <div style={{
+            padding: '2px',
+            background: 'var(--gradient-primary)',
+            borderRadius: '50%',
+            display: 'flex'
+          }}>
+            <img
+              src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
+              alt={user?.name}
+              style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1e293b' }}
+            />
+          </div>
           <button onClick={logout} className="btn btn-danger btn-sm" style={{ padding: '0.25rem 0.5rem' }}>
             <LogOut size={14} />
           </button>
@@ -111,7 +186,7 @@ export const Sidebar = ({ currentTab, setCurrentTab }) => {
               <CheckSquare size={22} color="#ffffff" />
             </div>
             {!collapsed && (
-              <span style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
                 TaskFlow<span className="gradient-text">Pro</span>
               </span>
             )}
@@ -126,51 +201,112 @@ export const Sidebar = ({ currentTab, setCurrentTab }) => {
           </button>
         </div>
 
-        {/* Action Button */}
-        <div style={{ padding: collapsed ? '1rem 0.5rem' : '1rem 1.25rem' }}>
+        {/* New Task Action Button */}
+        <div style={{ padding: collapsed ? '0.75rem 0.65rem' : '0.75rem 1rem' }}>
           <button
             onClick={() => { openCreateTaskModal(); setMobileOpen(false); }}
             className="btn btn-primary"
             style={{
               width: '100%',
-              padding: collapsed ? '0.75rem 0' : '0.75rem 1rem',
-              justifyContent: 'center'
+              padding: collapsed ? '0.7rem 0' : '0.7rem 1rem',
+              justifyContent: 'center',
+              fontSize: '0.9rem'
             }}
           >
-            <PlusCircle size={20} />
+            <PlusCircle size={18} />
             {!collapsed && <span>New Task</span>}
           </button>
         </div>
 
+        {/* Search (expanded only) */}
+        {!collapsed && (
+          <div style={{ padding: '0 1rem 0.5rem 1rem' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.55rem 0.75rem',
+              borderRadius: 'var(--radius-sm)',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-dim)',
+              fontSize: '0.85rem'
+            }}>
+              <Search size={15} />
+              <span>Quick search...</span>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Menu */}
         <nav className="sidebar-nav">
+          {/* Main Navigation */}
           <div className="sidebar-section-title">
-            {!collapsed && <span>NAVIGATION</span>}
+            {!collapsed ? <span>MAIN MENU</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
           </div>
 
-          {navItems.map(item => {
-            const isActive =
-              item.id === 'dashboard'
-                ? currentTab === 'dashboard'
-                : currentTab === 'dashboard' && viewMode === item.id;
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={item.action}
+              className={`sidebar-nav-item ${activeNav === item.id ? 'active' : ''}`}
+              title={collapsed ? item.label : ''}
+            >
+              <div className="sidebar-icon">{item.icon}</div>
+              {!collapsed && <span>{item.label}</span>}
+            </button>
+          ))}
 
-            return (
-              <button
-                key={item.id}
-                onClick={item.action}
-                className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                title={collapsed ? item.label : ''}
-              >
-                <div className="sidebar-icon">{item.icon}</div>
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            );
-          })}
+          {/* Tools & Quick Actions */}
+          <div className="sidebar-section-title" style={{ marginTop: '0.75rem' }}>
+            {!collapsed ? <span>TOOLS</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
+          </div>
+
+          {quickActions.map(item => (
+            <button
+              key={item.id}
+              onClick={item.action}
+              className={`sidebar-nav-item ${activeNav === item.id ? 'active' : ''}`}
+              title={collapsed ? item.label : ''}
+            >
+              <div className="sidebar-icon">{item.icon}</div>
+              {!collapsed && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
+                  <span>{item.label}</span>
+                  {item.badge > 0 && (
+                    <span style={{
+                      background: 'var(--accent-danger)',
+                      color: '#fff',
+                      fontSize: '0.65rem',
+                      fontWeight: '800',
+                      padding: '0.15rem 0.45rem',
+                      borderRadius: '10px',
+                      lineHeight: 1.2
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+              )}
+              {collapsed && item.badge > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: '8px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: 'var(--accent-danger)',
+                  boxShadow: '0 0 6px var(--accent-danger)'
+                }} />
+              )}
+            </button>
+          ))}
         </nav>
 
         {/* User Profile Footer */}
         <div className="sidebar-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden' }}>
             <div style={{
               padding: '2px',
               background: 'var(--gradient-primary)',
@@ -186,12 +322,12 @@ export const Sidebar = ({ currentTab, setCurrentTab }) => {
             </div>
 
             {!collapsed && (
-              <div style={{ overflow: 'hidden' }}>
-                <div style={{ fontSize: '0.875rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              <div style={{ overflow: 'hidden', flex: 1 }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                   {user?.name}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  ● Active Workspace
+                <div style={{ fontSize: '0.7rem', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  ● Online
                 </div>
               </div>
             )}
@@ -201,10 +337,21 @@ export const Sidebar = ({ currentTab, setCurrentTab }) => {
             <button
               onClick={logout}
               className="btn btn-danger btn-sm"
-              style={{ padding: '0.4rem 0.6rem', marginTop: '0.75rem', width: '100%', justifyContent: 'center' }}
+              style={{ padding: '0.4rem 0.6rem', marginTop: '0.65rem', width: '100%', justifyContent: 'center', fontSize: '0.8rem' }}
               title="Logout"
             >
-              <LogOut size={15} /> Logout
+              <LogOut size={14} /> Sign Out
+            </button>
+          )}
+
+          {collapsed && (
+            <button
+              onClick={logout}
+              className="btn btn-danger btn-sm"
+              style={{ padding: '0.35rem', marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}
+              title="Logout"
+            >
+              <LogOut size={16} />
             </button>
           )}
         </div>

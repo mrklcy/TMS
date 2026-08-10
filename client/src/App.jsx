@@ -19,6 +19,7 @@ const AppContent = () => {
   const { isAuthenticated } = useAuth();
   const { viewMode } = useTask();
   const [currentTab, setCurrentTab] = useState(isAuthenticated ? 'dashboard' : 'landing');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -31,10 +32,18 @@ const AppContent = () => {
       {isAuthenticated ? (
         <div className="app-layout-wrapper">
           {/* Vertical Sidebar Navigation */}
-          <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+          <Sidebar
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+            collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
+          />
 
           {/* Main Dashboard Workspace Content */}
-          <main className="main-workspace-content">
+          <main
+            className="main-workspace-content"
+            style={{ marginLeft: sidebarCollapsed ? '80px' : '260px' }}
+          >
             <div style={{
               display: 'flex',
               alignItems: 'center',

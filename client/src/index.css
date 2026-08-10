@@ -205,6 +205,8 @@ a:hover {
   transition: all var(--transition-fast);
   text-align: left;
   white-space: nowrap;
+  position: relative;
+  width: 100%;
 }
 
 .sidebar-nav-item:hover {
