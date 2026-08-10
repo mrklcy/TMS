@@ -527,12 +527,15 @@ a:hover {
     display: flex !important;
   }
 
-  .main-workspace-content {
+  .main-workspace-content,
+  .main-workspace-content.sidebar-collapsed {
     margin-left: 0 !important;
-    padding: 1.2rem 0.85rem !important;
+    padding: 1.2rem 1rem !important;
+    max-width: 100% !important;
   }
 
-  .sidebar-container {
+  .sidebar-container,
+  .sidebar-container.collapsed {
     transform: translateX(-100%);
     width: 270px !important;
   }
@@ -607,16 +610,26 @@ a:hover {
     width: 100% !important;
     min-width: 100% !important;
   }
+
+  /* Heading adjustments */
+  h1 {
+    font-size: 1.4rem !important;
+  }
 }
 
 @media (max-width: 480px) {
+  .main-workspace-content,
+  .main-workspace-content.sidebar-collapsed {
+    padding: 1rem 0.75rem !important;
+  }
+
   .form-input, .form-select, .form-textarea {
     font-size: 16px; /* Prevents auto-zoom on mobile safari */
   }
 
   .kanban-column-item {
-    min-width: 90vw !important;
-    max-width: 90vw !important;
+    min-width: 92vw !important;
+    max-width: 92vw !important;
   }
 
   .modal-footer {
@@ -626,4 +639,9 @@ a:hover {
   .modal-footer .btn {
     width: 100%;
   }
+
+  h1 {
+    font-size: 1.25rem !important;
+  }
 }
+

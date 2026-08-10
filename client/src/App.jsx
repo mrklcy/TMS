@@ -94,8 +94,7 @@ const AppContent = () => {
 
           {/* Main Dashboard Workspace Content */}
           <main
-            className="main-workspace-content"
-            style={{ marginLeft: sidebarCollapsed ? '80px' : '260px' }}
+            className={`main-workspace-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
           >
             {renderWorkspaceView()}
           </main>
