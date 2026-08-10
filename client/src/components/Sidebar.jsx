@@ -19,11 +19,10 @@ import {
   Bell
 } from 'lucide-react';
 
-export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed }) => {
+export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const { viewMode, setViewMode, openCreateTaskModal, stats } = useTask();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState('overview');
 
   if (!isAuthenticated) return null;
 

@@ -14,12 +14,17 @@ import { FilterBar } from './components/FilterBar';
 import { KanbanBoard } from './components/KanbanBoard';
 import { TaskList } from './components/TaskList';
 import { TaskModal } from './components/TaskModal';
+import { AnalyticsView } from './components/AnalyticsView';
+import { RecentActivityView } from './components/RecentActivityView';
+import { NotificationsView } from './components/NotificationsView';
+import { SettingsView } from './components/SettingsView';
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
   const { viewMode } = useTask();
   const [currentTab, setCurrentTab] = useState(isAuthenticated ? 'dashboard' : 'landing');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeNav, setActiveNav] = useState('overview');
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -27,23 +32,23 @@ const AppContent = () => {
     }
   }, [isAuthenticated]);
 
-  return (
-    <div className="app-container">
-      {isAuthenticated ? (
-        <div className="app-layout-wrapper">
-          {/* Vertical Sidebar Navigation */}
-          <Sidebar
-            currentTab={currentTab}
-            setCurrentTab={setCurrentTab}
-            collapsed={sidebarCollapsed}
-            setCollapsed={setSidebarCollapsed}
-          />
-
-          {/* Main Dashboard Workspace Content */}
-          <main
-            className="main-workspace-content"
-            style={{ marginLeft: sidebarCollapsed ? '80px' : '260px' }}
-          >
+  const renderWorkspaceView = () => {
+    switch (activeNav) {
+      case 'analytics':
+        return <AnalyticsView />;
+      case 'recent':
+        return <RecentActivityView />;
+      case 'notifications':
+        return <NotificationsView />;
+      case 'settings':
+        return <SettingsView />;
+      case 'kanban':
+      case 'list':
+      case 'overview':
+      default:
+        return (
+          <div>
+            {/* Dashboard Workspace Header */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -68,6 +73,31 @@ const AppContent = () => {
 
             {/* View Mode Component (Kanban vs List) */}
             {viewMode === 'kanban' ? <KanbanBoard /> : <TaskList />}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="app-container">
+      {isAuthenticated ? (
+        <div className="app-layout-wrapper">
+          {/* Vertical Sidebar Navigation */}
+          <Sidebar
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
+            collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
+            activeNav={activeNav}
+            setActiveNav={setActiveNav}
+          />
+
+          {/* Main Dashboard Workspace Content */}
+          <main
+            className="main-workspace-content"
+            style={{ marginLeft: sidebarCollapsed ? '80px' : '260px' }}
+          >
+            {renderWorkspaceView()}
           </main>
         </div>
       ) : (
