@@ -495,21 +495,15 @@ a:hover {
   background: rgba(255,255,255,0.02);
 }
 
-/* Responsive Media Queries */
+/* Responsive Breakpoint for Mobile/Tablet (< 1024px) */
 @media (max-width: 1024px) {
-  .main-content {
-    padding: 1.5rem 1rem;
-  }
-}
-
-@media (max-width: 768px) {
   .mobile-header {
-    display: flex;
+    display: flex !important;
   }
 
   .main-workspace-content {
     margin-left: 0 !important;
-    padding: 1.25rem 0.85rem;
+    padding: 1.2rem 0.85rem !important;
   }
 
   .sidebar-container {
