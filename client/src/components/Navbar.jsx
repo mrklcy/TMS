@@ -1,107 +1,125 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CheckSquare, LogOut, User, Sparkles, LayoutDashboard } from 'lucide-react';
+import { CheckSquare, LogOut, Sparkles } from 'lucide-react';
 
 export const Navbar = ({ currentTab, setCurrentTab }) => {
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
 
   return (
     <nav style={{
-      background: 'rgba(11, 15, 25, 0.85)',
-      backdropFilter: 'blur(16px)',
+      background: 'rgba(9, 13, 22, 0.88)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       borderBottom: '1px solid var(--border-subtle)',
       position: 'sticky',
       top: 0,
-      zIndex: 100
+      zIndex: 100,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
     }}>
       <div style={{
-        maxWidth: '1300px',
+        maxWidth: '1320px',
         margin: '0 auto',
         padding: '0.75rem 1.25rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '0.75rem'
+        flexWrap: 'nowrap',
+        gap: '0.5rem'
       }}>
         {/* Brand Logo */}
         <div 
           onClick={() => setCurrentTab(isAuthenticated ? 'dashboard' : 'landing')}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', flexShrink: 0 }}
         >
           <div style={{
-            width: '40px',
-            height: '40px',
+            width: '38px',
+            height: '38px',
             borderRadius: '12px',
             background: 'var(--gradient-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: 'var(--shadow-glow)'
+            boxShadow: 'var(--shadow-glow)',
+            flexShrink: 0
           }}>
-            <CheckSquare size={24} color="#ffffff" />
+            <CheckSquare size={22} color="#ffffff" />
           </div>
           <div>
-            <span style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.03em' }}>
+            <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
               TaskFlow<span className="gradient-text">Pro</span>
             </span>
           </div>
         </div>
 
         {/* Navigation items */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           {!isAuthenticated && (
             <button
               onClick={() => setCurrentTab('landing')}
               className={`btn ${currentTab === 'landing' ? 'btn-secondary' : ''}`}
               style={{
                 background: currentTab === 'landing' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                color: currentTab === 'landing' ? '#fff' : 'var(--text-muted)'
+                color: currentTab === 'landing' ? '#fff' : 'var(--text-muted)',
+                padding: '0.45rem 0.85rem'
               }}
             >
-              <Sparkles size={16} /> Home
+              <Sparkles size={15} /> Home
             </button>
           )}
 
           {/* User Auth state buttons */}
           {isAuthenticated ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
-                padding: '0.35rem 0.75rem',
-                borderRadius: '20px',
+                gap: '0.5rem',
+                padding: '0.3rem 0.7rem',
+                borderRadius: '24px',
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid var(--border-subtle)'
               }}>
-                <img
-                  src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
-                  alt={user.name}
-                  style={{ width: '28px', height: '28px', borderRadius: '50%' }}
-                />
-                <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{user.name}</span>
+                <div style={{
+                  padding: '2px',
+                  background: 'var(--gradient-primary)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <img
+                    src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
+                    alt={user?.name}
+                    style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#1e293b' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#ffffff', whiteSpace: 'nowrap' }}>
+                    {user?.name}
+                  </span>
+                </div>
               </div>
 
               <button
                 onClick={logout}
                 className="btn btn-danger btn-sm"
+                style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
                 title="Logout"
               >
-                <LogOut size={15} /> Logout
+                <LogOut size={14} /> Logout
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <button
                 onClick={() => openAuthModal('login')}
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-sm"
               >
                 Log In
               </button>
               <button
                 onClick={() => openAuthModal('register')}
-                className="btn btn-primary"
+                className="btn btn-primary btn-sm"
               >
                 Get Started
               </button>
