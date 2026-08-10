@@ -19,8 +19,8 @@ router.get('/', async (req, res) => {
     const userId = req.user.id;
     const { search, status, category, priority, sortBy } = req.query;
 
-    if (isDbConnected()) {
-      let query = {};
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId)) {
+      let query = { user: userId };
 
       if (status && status !== 'all') {
         query.status = status;
@@ -43,16 +43,11 @@ router.get('/', async (req, res) => {
       if (sortBy === 'priority') sortOption = { priority: -1 };
       if (sortBy === 'title') sortOption = { title: 1 };
 
-      if (mongoose.Types.ObjectId.isValid(userId)) {
-        query.user = userId;
-        const tasks = await Task.find(query).sort(sortOption);
-        res.json(tasks);
-      } else {
-        res.json([]);
-      }
+      const tasks = await Task.find(query).sort(sortOption);
+      return res.json(tasks);
     } else {
-      // In-memory fallback: strictly return tasks belonging to current user ID
-      let userTasks = inMemoryTasks.filter(t => t.user === userId);
+      // In-memory fallback: return tasks belonging to current user ID
+      let userTasks = inMemoryTasks.filter(t => String(t.user) === String(userId));
 
       if (status && status !== 'all') {
         userTasks = userTasks.filter(t => t.status === status);
@@ -70,7 +65,7 @@ router.get('/', async (req, res) => {
         );
       }
 
-      res.json(userTasks);
+      return res.json(userTasks);
     }
   } catch (error) {
     console.error('Error fetching tasks:', error);
@@ -84,22 +79,8 @@ router.get('/stats', async (req, res) => {
   try {
     const userId = req.user.id;
 
-    if (isDbConnected()) {
-      if (mongoose.Types.ObjectId.isValid(userId)) {
-        const tasks = await Task.find({ user: userId });
-        const stats = {
-          total: tasks.length,
-          todo: tasks.filter(t => t.status === 'todo').length,
-          inProgress: tasks.filter(t => t.status === 'in-progress').length,
-          completed: tasks.filter(t => t.status === 'completed').length,
-          urgent: tasks.filter(t => t.priority === 'urgent' && t.status !== 'completed').length
-        };
-        res.json(stats);
-      } else {
-        res.json({ total: 0, todo: 0, inProgress: 0, completed: 0, urgent: 0 });
-      }
-    } else {
-      const tasks = inMemoryTasks.filter(t => t.user === userId);
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId)) {
+      const tasks = await Task.find({ user: userId });
       const stats = {
         total: tasks.length,
         todo: tasks.filter(t => t.status === 'todo').length,
@@ -107,7 +88,17 @@ router.get('/stats', async (req, res) => {
         completed: tasks.filter(t => t.status === 'completed').length,
         urgent: tasks.filter(t => t.priority === 'urgent' && t.status !== 'completed').length
       };
-      res.json(stats);
+      return res.json(stats);
+    } else {
+      const tasks = inMemoryTasks.filter(t => String(t.user) === String(userId));
+      const stats = {
+        total: tasks.length,
+        todo: tasks.filter(t => t.status === 'todo').length,
+        inProgress: tasks.filter(t => t.status === 'in-progress').length,
+        completed: tasks.filter(t => t.status === 'completed').length,
+        urgent: tasks.filter(t => t.priority === 'urgent' && t.status !== 'completed').length
+      };
+      return res.json(stats);
     }
   } catch (error) {
     res.status(500).json({ message: 'Error calculating task statistics' });
@@ -123,28 +114,30 @@ router.post('/bulk', async (req, res) => {
       return res.status(400).json({ message: 'No tasks provided for bulk import' });
     }
 
-    const tasksToCreate = tasks.map(t => ({
-      user: req.user.id,
-      title: t.title,
-      description: t.description || '',
-      status: t.status || 'todo',
-      priority: t.priority || 'medium',
-      category: t.category || 'Work',
-      dueDate: t.dueDate ? new Date(t.dueDate) : null,
-      subtasks: t.subtasks || []
-    }));
+    const userId = req.user.id;
 
-    if (isDbConnected()) {
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId)) {
+      const tasksToCreate = tasks.map(t => ({
+        user: userId,
+        title: t.title,
+        description: t.description || '',
+        status: t.status || 'todo',
+        priority: t.priority || 'medium',
+        category: t.category || 'Work',
+        dueDate: t.dueDate ? new Date(t.dueDate) : null,
+        subtasks: t.subtasks || []
+      }));
       const created = await Task.insertMany(tasksToCreate);
-      res.status(201).json(created);
+      return res.status(201).json(created);
     } else {
-      const created = tasksToCreate.map((t, idx) => ({
+      const created = tasks.map((t, idx) => ({
         ...t,
         id: 'mem_task_' + (Date.now() + idx),
+        user: userId,
         createdAt: new Date().toISOString()
       }));
       inMemoryTasks.unshift(...created);
-      res.status(201).json(created);
+      return res.status(201).json(created);
     }
   } catch (error) {
     console.error('Bulk task creation error:', error);
@@ -157,14 +150,15 @@ router.post('/bulk', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { title, description, status, priority, category, dueDate, subtasks } = req.body;
+    const userId = req.user.id;
 
     if (!title || title.trim() === '') {
       return res.status(400).json({ message: 'Task title is required' });
     }
 
-    if (isDbConnected()) {
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId)) {
       const task = await Task.create({
-        user: req.user.id,
+        user: userId,
         title,
         description: description || '',
         status: status || 'todo',
@@ -173,11 +167,11 @@ router.post('/', async (req, res) => {
         dueDate: dueDate ? new Date(dueDate) : null,
         subtasks: subtasks || []
       });
-      res.status(201).json(task);
+      return res.status(201).json(task);
     } else {
       const newTask = {
         id: 'mem_task_' + Date.now(),
-        user: req.user.id,
+        user: userId,
         title,
         description: description || '',
         status: status || 'todo',
@@ -188,7 +182,7 @@ router.post('/', async (req, res) => {
         createdAt: new Date().toISOString()
       };
       inMemoryTasks.unshift(newTask);
-      res.status(201).json(newTask);
+      return res.status(201).json(newTask);
     }
   } catch (error) {
     console.error('Task creation error:', error);
@@ -201,13 +195,14 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
 
-    if (isDbConnected()) {
-      let task = await Task.findOne({ _id: id, user: req.user.id });
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId) && mongoose.Types.ObjectId.isValid(id)) {
+      let task = await Task.findOne({ _id: id, user: userId });
       if (!task) return res.status(404).json({ message: 'Task not found' });
 
       task = await Task.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
-      res.json(task);
+      return res.json(task);
     } else {
       const index = inMemoryTasks.findIndex(t => t.id === id);
       if (index === -1) return res.status(404).json({ message: 'Task not found' });
@@ -217,7 +212,7 @@ router.put('/:id', async (req, res) => {
         ...req.body,
         updatedAt: new Date().toISOString()
       };
-      res.json(inMemoryTasks[index]);
+      return res.json(inMemoryTasks[index]);
     }
   } catch (error) {
     res.status(500).json({ message: 'Failed to update task', error: error.message });
@@ -229,21 +224,22 @@ router.put('/:id', async (req, res) => {
 router.patch('/:id/toggle', async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
 
-    if (isDbConnected()) {
-      const task = await Task.findOne({ _id: id, user: req.user.id });
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId) && mongoose.Types.ObjectId.isValid(id)) {
+      const task = await Task.findOne({ _id: id, user: userId });
       if (!task) return res.status(404).json({ message: 'Task not found' });
 
       task.status = task.status === 'completed' ? 'todo' : 'completed';
       await task.save();
-      res.json(task);
+      return res.json(task);
     } else {
       const index = inMemoryTasks.findIndex(t => t.id === id);
       if (index === -1) return res.status(404).json({ message: 'Task not found' });
 
       const currentStatus = inMemoryTasks[index].status;
       inMemoryTasks[index].status = currentStatus === 'completed' ? 'todo' : 'completed';
-      res.json(inMemoryTasks[index]);
+      return res.json(inMemoryTasks[index]);
     }
   } catch (error) {
     res.status(500).json({ message: 'Error toggling task status' });
@@ -255,17 +251,18 @@ router.patch('/:id/toggle', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id;
 
-    if (isDbConnected()) {
-      const task = await Task.findOneAndDelete({ _id: id, user: req.user.id });
+    if (isDbConnected() && mongoose.Types.ObjectId.isValid(userId) && mongoose.Types.ObjectId.isValid(id)) {
+      const task = await Task.findOneAndDelete({ _id: id, user: userId });
       if (!task) return res.status(404).json({ message: 'Task not found' });
-      res.json({ message: 'Task removed successfully', id });
+      return res.json({ message: 'Task removed successfully', id });
     } else {
       const index = inMemoryTasks.findIndex(t => t.id === id);
       if (index === -1) return res.status(404).json({ message: 'Task not found' });
 
       inMemoryTasks = inMemoryTasks.filter(t => t.id !== id);
-      res.json({ message: 'Task removed successfully', id });
+      return res.json({ message: 'Task removed successfully', id });
     }
   } catch (error) {
     res.status(500).json({ message: 'Error deleting task' });

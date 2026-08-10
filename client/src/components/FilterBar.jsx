@@ -36,7 +36,7 @@ export const FilterBar = () => {
         justifyContent: 'space-between'
       }}>
         {/* Left Side: Search & Select Dropdowns */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', flex: 1, minWidth: '280px' }}>
+        <div className="filter-controls-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', flex: 1, minWidth: '280px' }}>
           {/* Search Box */}
           <div style={{ position: 'relative', minWidth: '220px', flex: 1 }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-dim)' }} />
@@ -52,7 +52,7 @@ export const FilterBar = () => {
 
           {/* Category Selector */}
           <select
-            className="form-select"
+            className="form-select filter-select-item"
             style={{ width: 'auto', minWidth: '130px' }}
             value={categoryFilter}
             onChange={e => setCategoryFilter(e.target.value)}
@@ -66,7 +66,7 @@ export const FilterBar = () => {
 
           {/* Priority Selector */}
           <select
-            className="form-select"
+            className="form-select filter-select-item"
             style={{ width: 'auto', minWidth: '130px' }}
             value={priorityFilter}
             onChange={e => setPriorityFilter(e.target.value)}
@@ -80,7 +80,7 @@ export const FilterBar = () => {
 
           {/* Status Filter */}
           <select
-            className="form-select"
+            className="form-select filter-select-item"
             style={{ width: 'auto', minWidth: '130px' }}
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}

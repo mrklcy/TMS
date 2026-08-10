@@ -76,8 +76,8 @@ a:hover {
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-main);
@@ -339,4 +339,86 @@ a:hover {
   justify-content: flex-end;
   gap: 0.75rem;
   background: rgba(255,255,255,0.02);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1.2rem 0.75rem;
+  }
+
+  .glass-panel {
+    border-radius: var(--radius-md);
+  }
+
+  .modal-overlay {
+    padding: 0.75rem;
+  }
+
+  .modal-content {
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-header, .modal-body, .modal-footer {
+    padding: 1rem 1.15rem;
+  }
+
+  .btn {
+    padding: 0.6rem 1.1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Kanban Board Grid Responsiveness */
+  .kanban-grid-container {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    gap: 1.1rem !important;
+    padding-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kanban-column-item {
+    min-width: 86vw !important;
+    max-width: 86vw !important;
+    scroll-snap-align: center;
+    max-height: 68vh !important;
+  }
+
+  /* Filter Bar Responsiveness */
+  .filter-controls-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .filter-select-item {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-input, .form-select, .form-textarea {
+    font-size: 16px; /* Prevents auto-zoom on mobile safari */
+  }
+
+  .kanban-column-item {
+    min-width: 90vw !important;
+    max-width: 90vw !important;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+  }
 }

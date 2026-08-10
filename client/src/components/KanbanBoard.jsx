@@ -42,16 +42,19 @@ export const KanbanBoard = () => {
   };
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-      gap: '1.5rem',
-      alignItems: 'start'
-    }}>
+    <div
+      className="kanban-grid-container"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
+        gap: '1.5rem',
+        alignItems: 'start'
+      }}
+    >
       {columns.map(col => (
         <div
           key={col.id}
-          className="glass-panel"
+          className="glass-panel kanban-column-item"
           style={{
             padding: '1.25rem',
             borderTop: `4px solid ${col.borderTop}`,
