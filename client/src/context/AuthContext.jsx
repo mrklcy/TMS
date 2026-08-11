@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login'); // 'login' | 'register'
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -58,10 +59,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    setIsLogoutConfirmOpen(true);
+  };
+
+  const confirmLogout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('tms_token');
     localStorage.removeItem('tms_user');
+    setIsLogoutConfirmOpen(false);
+  };
+
+  const cancelLogout = () => {
+    setIsLogoutConfirmOpen(false);
   };
 
   const openAuthModal = (mode = 'login') => {
@@ -82,12 +92,15 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         isAuthModalOpen,
         authModalMode,
+        isLogoutConfirmOpen,
         openAuthModal,
         closeAuthModal,
         setAuthModalMode,
         login,
         register,
-        logout
+        logout,
+        confirmLogout,
+        cancelLogout
       }}
     >
       {children}
