@@ -231,9 +231,19 @@ router.put('/:id', async (req, res) => {
       const index = inMemoryTasks.findIndex(t => t.id === id && String(t.user) === String(userId));
       if (index === -1) return res.status(404).json({ message: 'Task not found or access denied' });
 
+      const { title, description, status, priority, category, dueDate, subtasks } = req.body;
+      const updatedFields = {};
+      if (title !== undefined) updatedFields.title = String(title).substring(0, 200);
+      if (description !== undefined) updatedFields.description = String(description).substring(0, 2000);
+      if (status !== undefined && ['todo', 'in-progress', 'completed'].includes(status)) updatedFields.status = status;
+      if (priority !== undefined && ['low', 'medium', 'high', 'urgent'].includes(priority)) updatedFields.priority = priority;
+      if (category !== undefined) updatedFields.category = String(category).substring(0, 50);
+      if (dueDate !== undefined) updatedFields.dueDate = dueDate ? new Date(dueDate).toISOString() : null;
+      if (subtasks !== undefined && Array.isArray(subtasks)) updatedFields.subtasks = subtasks.slice(0, 20);
+
       inMemoryTasks[index] = {
         ...inMemoryTasks[index],
-        ...req.body,
+        ...updatedFields,
         updatedAt: new Date().toISOString()
       };
       return res.json(inMemoryTasks[index]);

@@ -43,6 +43,7 @@ export const FilterBar = () => {
             <input
               type="text"
               className="form-input"
+              maxLength={100}
               placeholder="Search tasks..."
               style={{ paddingLeft: '2.4rem' }}
               value={searchQuery}

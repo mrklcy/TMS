@@ -58,6 +58,7 @@ export const SettingsView = () => {
             <input
               type="text"
               className="form-input"
+              maxLength={50}
               value={settings.displayName}
               onChange={(e) => setSettings({ ...settings, displayName: e.target.value })}
             />
@@ -68,6 +69,7 @@ export const SettingsView = () => {
             <input
               type="email"
               className="form-input"
+              maxLength={100}
               value={settings.email}
               onChange={(e) => setSettings({ ...settings, email: e.target.value })}
             />
