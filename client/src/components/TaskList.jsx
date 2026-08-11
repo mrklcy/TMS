@@ -3,7 +3,7 @@ import { useTask } from '../context/TaskContext';
 import { CheckCircle2, Circle, Edit3, Trash2, Calendar, Tag, AlertTriangle } from 'lucide-react';
 
 export const TaskList = () => {
-  const { tasks, updateTaskStatus, deleteTask, openEditTaskModal } = useTask();
+  const { tasks, updateTaskStatus, requestDeleteTask, openEditTaskModal } = useTask();
 
   const getPriorityBadge = (priority) => {
     switch (priority) {
@@ -119,7 +119,7 @@ export const TaskList = () => {
                       <Edit3 size={14} /> Edit
                     </button>
                     <button
-                      onClick={() => deleteTask(taskId)}
+                      onClick={() => requestDeleteTask(task)}
                       className="btn btn-danger btn-sm"
                       style={{ padding: '0.3rem 0.6rem' }}
                     >

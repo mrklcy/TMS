@@ -3,7 +3,7 @@ import { useTask } from '../context/TaskContext';
 import { CheckCircle2, Clock, Calendar, Edit3, Trash2, ChevronRight, ChevronLeft, Plus, CheckSquare } from 'lucide-react';
 
 export const KanbanBoard = () => {
-  const { tasks, updateTaskStatus, toggleSubtask, deleteTask, openEditTaskModal, openCreateTaskModal } = useTask();
+  const { tasks, updateTaskStatus, toggleSubtask, requestDeleteTask, openEditTaskModal, openCreateTaskModal } = useTask();
 
   const columns = [
     {
@@ -56,29 +56,25 @@ export const KanbanBoard = () => {
           key={col.id}
           className="glass-panel kanban-column-item"
           style={{
-            padding: '1.25rem',
+            padding: 0,
             borderTop: `4px solid ${col.borderTop}`,
             display: 'flex',
             flexDirection: 'column',
-            gap: '0.85rem',
             maxHeight: 'calc(100vh - 280px)',
-            minHeight: '450px',
-            overflowY: 'auto'
+            minHeight: '480px',
+            overflow: 'hidden'
           }}
         >
-          {/* Sticky Column Header */}
+          {/* Column Header */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            paddingBottom: '0.85rem',
+            padding: '1rem 1.25rem',
             borderBottom: '1px solid var(--border-subtle)',
-            position: 'sticky',
-            top: 0,
             background: 'rgba(15, 23, 42, 0.95)',
             backdropFilter: 'blur(12px)',
-            zIndex: 10,
-            paddingTop: '0.2rem'
+            flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <span style={{ fontSize: '1.05rem', fontWeight: '800', color: col.color }}>{col.title}</span>
@@ -104,6 +100,16 @@ export const KanbanBoard = () => {
               <Plus size={16} /> Add Task
             </button>
           </div>
+
+          {/* Task Cards Scrollable Container */}
+          <div style={{
+            padding: '1.25rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.85rem',
+            overflowY: 'auto',
+            flex: 1
+          }}>
 
           {/* Task Cards Container */}
           {col.items.length === 0 ? (
@@ -261,7 +267,7 @@ export const KanbanBoard = () => {
                       </button>
 
                       <button
-                        onClick={() => deleteTask(taskId)}
+                        onClick={() => requestDeleteTask(task)}
                         style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '6px', color: '#f87171', cursor: 'pointer', padding: '4px', display: 'flex' }}
                         title="Delete task"
                       >
@@ -273,6 +279,7 @@ export const KanbanBoard = () => {
               );
             })
           )}
+          </div>
         </div>
       ))}
     </div>

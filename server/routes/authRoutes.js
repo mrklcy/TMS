@@ -11,6 +11,8 @@ const inMemoryUsers = [];
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // @route   POST /api/auth/register
 // @desc    Register a new user
 router.post('/register', async (req, res) => {
@@ -21,7 +23,18 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    if (password.length < 6) {
+    const trimmedName = String(name).trim();
+    const trimmedEmail = String(email).trim().toLowerCase();
+
+    if (trimmedName.length < 2 || trimmedName.length > 50) {
+      return res.status(400).json({ message: 'Name must be between 2 and 50 characters' });
+    }
+
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
+    if (String(password).length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
@@ -89,6 +102,11 @@ router.post('/login', async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
+    }
+
+    const trimmedEmail = String(email).trim().toLowerCase();
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
     }
 
     if (isDbConnected()) {

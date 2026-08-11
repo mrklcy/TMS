@@ -14,6 +14,7 @@ import { FilterBar } from './components/FilterBar';
 import { KanbanBoard } from './components/KanbanBoard';
 import { TaskList } from './components/TaskList';
 import { TaskModal } from './components/TaskModal';
+import { ConfirmModal } from './components/ConfirmModal';
 import { AnalyticsView } from './components/AnalyticsView';
 import { RecentActivityView } from './components/RecentActivityView';
 import { NotificationsView } from './components/NotificationsView';
@@ -115,6 +116,7 @@ const AppContent = () => {
       {/* Global Modals */}
       <AuthModal />
       <TaskModal />
+      <ConfirmModal />
     </div>
   );
 };

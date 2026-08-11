@@ -77,6 +77,10 @@ export const TaskProvider = ({ children }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
+  // Security Delete Confirmation Modal State
+  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+
   const fetchTasks = useCallback(async () => {
     if (!isAuthenticated) {
       setTasks([]);
@@ -203,6 +207,27 @@ export const TaskProvider = ({ children }) => {
     );
   };
 
+  const requestDeleteTask = (task) => {
+    setTaskToDelete(task);
+    setConfirmDeleteModalOpen(true);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return;
+    const id = taskToDelete.id || taskToDelete._id;
+    setTasks(prev => prev.filter(t => t.id !== id && t._id !== id));
+    try {
+      await api.deleteTask(id);
+    } catch (e) {}
+    setConfirmDeleteModalOpen(false);
+    setTaskToDelete(null);
+  };
+
+  const cancelDeleteTask = () => {
+    setConfirmDeleteModalOpen(false);
+    setTaskToDelete(null);
+  };
+
   const deleteTask = async (id) => {
     setTasks(prev => prev.filter(t => t.id !== id && t._id !== id));
     try {
@@ -252,7 +277,12 @@ export const TaskProvider = ({ children }) => {
         updateTask,
         updateTaskStatus,
         toggleSubtask,
-        deleteTask
+        deleteTask,
+        confirmDeleteModalOpen,
+        taskToDelete,
+        requestDeleteTask,
+        confirmDeleteTask,
+        cancelDeleteTask
       }}
     >
       {children}
