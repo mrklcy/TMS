@@ -55,28 +55,6 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       }
     },
     {
-      id: 'kanban',
-      label: 'Kanban Board',
-      icon: <Kanban size={20} />,
-      action: () => {
-        setActiveNav('kanban');
-        setCurrentTab('dashboard');
-        setViewMode('kanban');
-        setMobileOpen(false);
-      }
-    },
-    {
-      id: 'list',
-      label: 'List View',
-      icon: <ListFilter size={20} />,
-      action: () => {
-        setActiveNav('list');
-        setCurrentTab('dashboard');
-        setViewMode('list');
-        setMobileOpen(false);
-      }
-    },
-    {
       id: 'analytics',
       label: 'Analytics',
       icon: <BarChart3 size={20} />,
