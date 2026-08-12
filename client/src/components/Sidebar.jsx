@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTask } from '../context/TaskContext';
 import {
@@ -16,15 +16,32 @@ import {
   BarChart3,
   Settings,
   Search,
-  Bell
+  Bell,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav }) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isDarkMode, toggleDarkMode } = useAuth();
   const { viewMode, setViewMode, openCreateTaskModal, stats, searchQuery, setSearchQuery } = useTask();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!isAuthenticated) return null;
+
+  const isCollapsedEffective = collapsed && !isMobile;
 
   const navItems = [
     {
@@ -107,14 +124,15 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
 
   return (
     <>
-      {/* Mobile Top Header with Hamburger */}
+      {/* Mobile Top Sticky Navigation Header */}
       <div className="mobile-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="mobile-hamburger-btn"
+            aria-label="Toggle Navigation Menu"
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{
@@ -124,25 +142,36 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
               background: 'var(--gradient-primary)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              boxShadow: 'var(--shadow-glow)'
             }}>
               <CheckSquare size={18} color="#fff" />
             </div>
-            <span style={{ fontSize: '1.1rem', fontWeight: '800' }}>
+            <span style={{ fontSize: '1.1rem', fontWeight: '800', letterSpacing: '-0.02em' }}>
               TaskFlow<span className="gradient-text">Pro</span>
             </span>
           </div>
         </div>
 
-        {/* Mobile right actions */}
+        {/* Mobile top right actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <button
-            onClick={() => { openCreateTaskModal(); }}
-            className="btn btn-primary btn-sm"
-            style={{ padding: '0.35rem 0.65rem' }}
+            onClick={() => toggleDarkMode()}
+            className="btn btn-secondary btn-sm"
+            style={{ padding: '0.35rem 0.55rem' }}
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            <PlusCircle size={16} />
+            {isDarkMode ? <Sun size={16} color="#fbbf24" /> : <Moon size={16} color="#6366f1" />}
           </button>
+
+          <button
+            onClick={() => openCreateTaskModal()}
+            className="btn btn-primary btn-sm"
+            style={{ padding: '0.35rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+          >
+            <PlusCircle size={16} /> Task
+          </button>
+
           <div style={{
             padding: '2px',
             background: 'var(--gradient-primary)',
@@ -152,25 +181,22 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
             <img
               src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
               alt={user?.name}
-              style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1e293b' }}
+              style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#1e293b' }}
             />
           </div>
-          <button onClick={logout} className="btn btn-danger btn-sm" style={{ padding: '0.25rem 0.5rem' }}>
-            <LogOut size={14} />
-          </button>
         </div>
       </div>
 
-      {/* Mobile Overlay Backdrop */}
+      {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
         <div className="mobile-sidebar-overlay" onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* Main Sidebar (Desktop + Mobile Drawer) */}
-      <aside className={`sidebar-container ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
-        {/* Sidebar Header */}
+      {/* Main Sidebar (Desktop Fixed + Mobile Off-Canvas Drawer) */}
+      <aside className={`sidebar-container ${isCollapsedEffective ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+        {/* Sidebar Header - Clean & Spacious Logo Header */}
         <div className="sidebar-header">
-          {collapsed ? (
+          {isCollapsedEffective ? (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -215,38 +241,61 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
                   TaskFlow<span className="gradient-text">Pro</span>
                 </span>
               </div>
-              <button
-                onClick={() => setCollapsed(true)}
-                className="sidebar-toggle-btn desktop-only"
-                title="Collapse Sidebar"
-              >
-                <ChevronLeft size={18} />
-              </button>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {/* Desktop collapse button */}
+                <button
+                  onClick={() => setCollapsed(true)}
+                  className="sidebar-toggle-btn desktop-only"
+                  title="Collapse Sidebar"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+
+                {/* Mobile drawer close button */}
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="mobile-only"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.35rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* New Task Action Button */}
-        <div style={{ padding: collapsed ? '0.6rem 0.65rem' : '0.85rem 1.15rem' }}>
+        {/* New Task Button */}
+        <div style={{ padding: isCollapsedEffective ? '0.6rem 0.65rem' : '0.85rem 1.15rem' }}>
           <button
             onClick={() => { openCreateTaskModal(); setMobileOpen(false); }}
             className="btn btn-primary"
             style={{
               width: '100%',
-              padding: collapsed ? '0.65rem 0' : '0.75rem 1rem',
+              padding: isCollapsedEffective ? '0.65rem 0' : '0.75rem 1rem',
               justifyContent: 'center',
-              fontSize: collapsed ? '0.8rem' : '0.9rem',
+              fontSize: isCollapsedEffective ? '0.8rem' : '0.9rem',
               borderRadius: 'var(--radius-md)'
             }}
-            title={collapsed ? 'New Task' : ''}
+            title={isCollapsedEffective ? 'New Task' : ''}
           >
-            <PlusCircle size={collapsed ? 20 : 18} />
-            {!collapsed && <span>New Task</span>}
+            <PlusCircle size={isCollapsedEffective ? 20 : 18} />
+            {!isCollapsedEffective && <span>New Task</span>}
           </button>
         </div>
 
-        {/* Interactive Search Input (expanded only) */}
-        {!collapsed && (
+        {/* Search Bar */}
+        {!isCollapsedEffective && (
           <div style={{ padding: '0 1.15rem 0.6rem 1.15rem' }}>
             <div style={{
               display: 'flex',
@@ -268,7 +317,7 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
                   background: 'transparent',
                   border: 'none',
                   outline: 'none',
-                  color: '#ffffff',
+                  color: 'inherit',
                   fontSize: '0.85rem',
                   width: '100%'
                 }}
@@ -277,11 +326,10 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
           </div>
         )}
 
-        {/* Navigation Menu */}
-        <nav className="sidebar-nav" style={{ padding: collapsed ? '0.5rem 0.4rem' : '0.5rem 0.85rem' }}>
-          {/* Main Navigation */}
+        {/* Navigation Items */}
+        <nav className="sidebar-nav" style={{ padding: isCollapsedEffective ? '0.5rem 0.4rem' : '0.5rem 0.85rem' }}>
           <div className="sidebar-section-title">
-            {!collapsed ? <span>MAIN MENU</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
+            {!isCollapsedEffective ? <span>MAIN MENU</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
           </div>
 
           {navItems.map(item => (
@@ -289,16 +337,15 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
               key={item.id}
               onClick={item.action}
               className={`sidebar-nav-item ${activeNav === item.id ? 'active' : ''}`}
-              title={collapsed ? item.label : ''}
+              title={isCollapsedEffective ? item.label : ''}
             >
               <div className="sidebar-icon">{item.icon}</div>
-              {!collapsed && <span>{item.label}</span>}
+              {!isCollapsedEffective && <span>{item.label}</span>}
             </button>
           ))}
 
-          {/* Tools & Quick Actions */}
           <div className="sidebar-section-title" style={{ marginTop: '0.75rem' }}>
-            {!collapsed ? <span>TOOLS</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
+            {!isCollapsedEffective ? <span>TOOLS & PREFERENCES</span> : <div style={{ borderBottom: '1px solid var(--border-subtle)', margin: '0.25rem 0.5rem' }} />}
           </div>
 
           {quickActions.map(item => (
@@ -306,10 +353,10 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
               key={item.id}
               onClick={item.action}
               className={`sidebar-nav-item ${activeNav === item.id ? 'active' : ''}`}
-              title={collapsed ? item.label : ''}
+              title={isCollapsedEffective ? item.label : ''}
             >
               <div className="sidebar-icon">{item.icon}</div>
-              {!collapsed && (
+              {!isCollapsedEffective && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
                   <span>{item.label}</span>
                   {item.badge > 0 && (
@@ -327,7 +374,7 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
                   )}
                 </div>
               )}
-              {collapsed && item.badge > 0 && (
+              {isCollapsedEffective && item.badge > 0 && (
                 <div style={{
                   position: 'absolute',
                   top: '6px',
@@ -344,35 +391,60 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
         </nav>
 
         {/* User Profile Footer */}
-        <div className="sidebar-footer" style={{ padding: collapsed ? '0.75rem 0.5rem' : '1.15rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-            <div style={{
-              padding: '2px',
-              background: 'var(--gradient-primary)',
-              borderRadius: '50%',
-              display: 'flex',
-              flexShrink: 0
-            }}>
-              <img
-                src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
-                alt={user?.name}
-                style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#1e293b' }}
-              />
+        <div className="sidebar-footer" style={{ padding: isCollapsedEffective ? '0.75rem 0.5rem' : '1.15rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden', flex: 1 }}>
+              <div style={{
+                padding: '2px',
+                background: 'var(--gradient-primary)',
+                borderRadius: '50%',
+                display: 'flex',
+                flexShrink: 0
+              }}>
+                <img
+                  src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
+                  alt={user?.name}
+                  style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1e293b' }}
+                />
+              </div>
+
+              {!isCollapsedEffective && (
+                <div style={{ overflow: 'hidden', flex: 1 }}>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '700', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {user?.name}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    ● Online
+                  </div>
+                </div>
+              )}
             </div>
 
-            {!collapsed && (
-              <div style={{ overflow: 'hidden', flex: 1 }}>
-                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                  {user?.name}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent-success)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  ● Online
-                </div>
-              </div>
+            {/* Theme Toggle Button right beside user info */}
+            {!isCollapsedEffective && (
+              <button
+                onClick={() => toggleDarkMode()}
+                style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '10px',
+                  background: isDarkMode ? 'rgba(251, 191, 36, 0.12)' : 'rgba(99, 102, 241, 0.12)',
+                  border: isDarkMode ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(99, 102, 241, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease'
+                }}
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDarkMode ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#6366f1" />}
+              </button>
             )}
           </div>
 
-          {!collapsed && (
+          {!isCollapsedEffective && (
             <button
               onClick={logout}
               className="btn btn-danger btn-sm"
@@ -383,15 +455,34 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
             </button>
           )}
 
-          {collapsed && (
-            <button
-              onClick={logout}
-              className="btn btn-danger btn-sm"
-              style={{ padding: '0.35rem', marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}
-              title="Logout"
-            >
-              <LogOut size={16} />
-            </button>
+          {isCollapsedEffective && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', alignItems: 'center' }}>
+              <button
+                onClick={() => toggleDarkMode()}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDarkMode ? <Sun size={16} color="#fbbf24" /> : <Moon size={16} color="#6366f1" />}
+              </button>
+              <button
+                onClick={logout}
+                className="btn btn-danger btn-sm"
+                style={{ padding: '0.35rem', width: '100%', justifyContent: 'center' }}
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           )}
         </div>
       </aside>

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CheckSquare, LogOut, Sparkles } from 'lucide-react';
+import { CheckSquare, LogOut, Sparkles, Sun, Moon } from 'lucide-react';
 
 export const Navbar = ({ currentTab, setCurrentTab }) => {
-  const { user, isAuthenticated, logout, openAuthModal } = useAuth();
+  const { user, isAuthenticated, logout, openAuthModal, isDarkMode, toggleDarkMode } = useAuth();
 
   return (
     <nav style={{
@@ -52,7 +52,16 @@ export const Navbar = ({ currentTab, setCurrentTab }) => {
         </div>
 
         {/* Navigation items */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+          <button
+            onClick={() => toggleDarkMode()}
+            className="btn btn-secondary btn-sm"
+            style={{ padding: '0.4rem 0.65rem' }}
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            {isDarkMode ? <Sun size={16} color="#fbbf24" /> : <Moon size={16} color="#6366f1" />}
+          </button>
+
           {!isAuthenticated && (
             <button
               onClick={() => setCurrentTab('landing')}

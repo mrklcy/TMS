@@ -46,8 +46,8 @@ app.use(cors({
 }));
 
 // Body Parser Middleware with Payload Size Limitation (OWASP A04: DoS Prevention)
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // OWASP A04: Rate Limiting against Brute-Force & Denial of Service (DoS)
 const apiLimiter = rateLimit({

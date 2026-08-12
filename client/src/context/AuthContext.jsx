@@ -83,6 +83,43 @@ export const AuthProvider = ({ children }) => {
     setIsAuthModalOpen(false);
   };
 
+  const updateUser = async (updatedData) => {
+    const updated = await api.updateProfile(updatedData);
+    const newUserData = { ...user, ...updated };
+    setUser(newUserData);
+    localStorage.setItem('tms_user', JSON.stringify(newUserData));
+    return newUserData;
+  };
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('tms_theme');
+    return saved ? saved === 'dark' : true;
+  });
+
+  const [isCompactView, setIsCompactView] = useState(() => {
+    const saved = localStorage.getItem('tms_compact');
+    return saved ? saved === 'true' : false;
+  });
+
+  useEffect(() => {
+    const theme = isDarkMode ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('tms_theme', theme);
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-compact', isCompactView ? 'true' : 'false');
+    localStorage.setItem('tms_compact', isCompactView ? 'true' : 'false');
+  }, [isCompactView]);
+
+  const toggleDarkMode = (val) => {
+    setIsDarkMode(prev => (typeof val === 'boolean' ? val : !prev));
+  };
+
+  const toggleCompactView = (val) => {
+    setIsCompactView(prev => (typeof val === 'boolean' ? val : !prev));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -93,6 +130,10 @@ export const AuthProvider = ({ children }) => {
         isAuthModalOpen,
         authModalMode,
         isLogoutConfirmOpen,
+        isDarkMode,
+        isCompactView,
+        toggleDarkMode,
+        toggleCompactView,
         openAuthModal,
         closeAuthModal,
         setAuthModalMode,
@@ -100,7 +141,8 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         confirmLogout,
-        cancelLogout
+        cancelLogout,
+        updateUser
       }}
     >
       {children}

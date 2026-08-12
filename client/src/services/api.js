@@ -75,6 +75,29 @@ export const api = {
     }
   },
 
+  async updateProfile(profileData) {
+    try {
+      const res = await fetch(`${API_BASE}/auth/profile`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(profileData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update profile');
+      return data;
+    } catch (err) {
+      if (err.message.includes('Failed to fetch')) {
+        return {
+          id: profileData.id || 'mem_user',
+          name: profileData.name,
+          email: profileData.email,
+          avatar: profileData.avatar
+        };
+      }
+      throw err;
+    }
+  },
+
   // Task Services
   async getTasks(filters = {}) {
     try {

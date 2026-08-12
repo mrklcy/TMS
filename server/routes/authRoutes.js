@@ -155,22 +155,76 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user profile
-router.get('/me', protect, async (req, res) => {
+// @route   PUT /api/auth/profile
+// @desc    Update user profile (name, email, avatar)
+router.put('/profile', protect, async (req, res) => {
   try {
+    const { name, email, avatar } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
+
+    const trimmedName = String(name).trim();
+    const trimmedEmail = String(email).trim().toLowerCase();
+
+    if (trimmedName.length < 2 || trimmedName.length > 50) {
+      return res.status(400).json({ message: 'Name must be between 2 and 50 characters' });
+    }
+
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
     if (isDbConnected()) {
-      const user = await User.findById(req.user.id).select('-password');
-      if (!user) return res.status(404).json({ message: 'User not found' });
-      res.json(user);
+      const existingUser = await User.findOne({ email: trimmedEmail, _id: { $ne: req.user.id } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email address is already in use by another account' });
+      }
+
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      user.name = trimmedName;
+      user.email = trimmedEmail;
+      if (avatar !== undefined) user.avatar = avatar;
+
+      await user.save();
+
+      return res.json({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar
+      });
     } else {
-      const user = inMemoryUsers.find(u => u.id === req.user.id);
-      if (!user) return res.status(404).json({ message: 'User not found' });
-      const { password, ...userWithoutPass } = user;
-      res.json(userWithoutPass);
+      const existingUser = inMemoryUsers.find(u => u.email === trimmedEmail && u.id !== req.user.id);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email address is already in use by another account' });
+      }
+
+      const userIndex = inMemoryUsers.findIndex(u => u.id === req.user.id);
+      if (userIndex === -1) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      inMemoryUsers[userIndex].name = trimmedName;
+      inMemoryUsers[userIndex].email = trimmedEmail;
+      if (avatar !== undefined) inMemoryUsers[userIndex].avatar = avatar;
+
+      const updatedUser = inMemoryUsers[userIndex];
+      return res.json({
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar
+      });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error fetching user profile' });
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error updating profile', error: error.message });
   }
 });
 
