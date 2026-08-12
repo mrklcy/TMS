@@ -1,9 +1,11 @@
 import React from 'react';
 import { useTask } from '../context/TaskContext';
-import { Search, Plus, Kanban, ListFilter, SlidersHorizontal } from 'lucide-react';
+import { Search, Plus, Kanban, ListFilter, Download } from 'lucide-react';
+import { exportTasksToCSV } from '../utils/exportUtils';
 
 export const FilterBar = () => {
   const {
+    tasks,
     viewMode,
     setViewMode,
     searchQuery,
@@ -94,8 +96,18 @@ export const FilterBar = () => {
           </select>
         </div>
 
-        {/* Right Side: View Toggles & Add Button */}
+        {/* Right Side: View Toggles & Export & Add Button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* Export CSV button */}
+          <button
+            onClick={() => exportTasksToCSV(tasks)}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: '0.4rem', padding: '0.55rem 0.85rem' }}
+            title="Export Tasks to CSV"
+          >
+            <Download size={16} color="var(--accent-success)" /> Export CSV
+          </button>
+
           {/* View mode toggle */}
           <div style={{
             display: 'flex',

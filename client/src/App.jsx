@@ -23,19 +23,37 @@ import { SettingsView } from './components/SettingsView';
 import { CalendarView } from './components/CalendarView';
 import { ProjectsView } from './components/ProjectsView';
 import { TeamView } from './components/TeamView';
+import { FocusTimerView } from './components/FocusTimerView';
+import { AICopilotModal } from './components/AICopilotModal';
+import { CommandPaletteModal } from './components/CommandPaletteModal';
+import { exportTasksToCSV } from './utils/exportUtils';
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
-  const { viewMode } = useTask();
+  const { viewMode, tasks } = useTask();
   const [currentTab, setCurrentTab] = useState(isAuthenticated ? 'dashboard' : 'landing');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeNav, setActiveNav] = useState('overview');
+
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [isCmdPaletteOpen, setIsCmdPaletteOpen] = useState(false);
 
   React.useEffect(() => {
     if (isAuthenticated) {
       setCurrentTab('dashboard');
     }
   }, [isAuthenticated]);
+
+  React.useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCmdPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   const renderWorkspaceView = () => {
     switch (activeNav) {
@@ -45,6 +63,8 @@ const AppContent = () => {
         return <ProjectsView />;
       case 'team':
         return <TeamView />;
+      case 'focustimer':
+        return <FocusTimerView />;
       case 'analytics':
         return <AnalyticsView />;
       case 'recent':
@@ -101,6 +121,8 @@ const AppContent = () => {
             setCollapsed={setSidebarCollapsed}
             activeNav={activeNav}
             setActiveNav={setActiveNav}
+            onOpenAICopilot={() => setIsCopilotOpen(true)}
+            onOpenCmdPalette={() => setIsCmdPaletteOpen(true)}
           />
 
           {/* Main Dashboard Workspace Content */}
@@ -128,6 +150,15 @@ const AppContent = () => {
       <TaskModal />
       <ConfirmModal />
       <LogoutConfirmModal />
+      <AICopilotModal isOpen={isCopilotOpen} onClose={() => setIsCopilotOpen(false)} />
+      <CommandPaletteModal
+        isOpen={isCmdPaletteOpen}
+        onClose={() => setIsCmdPaletteOpen(false)}
+        onSelectNav={(navId) => { setActiveNav(navId); setCurrentTab('dashboard'); }}
+        onOpenAICopilot={() => setIsCopilotOpen(true)}
+        onOpenFocusTimer={() => { setActiveNav('focustimer'); setCurrentTab('dashboard'); }}
+        onOpenExport={() => exportTasksToCSV(tasks)}
+      />
     </div>
   );
 };

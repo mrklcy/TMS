@@ -21,10 +21,13 @@ import {
   Moon,
   Calendar,
   FolderKanban,
-  Users
+  Users,
+  Bot,
+  Timer,
+  Sparkles
 } from 'lucide-react';
 
-export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav }) => {
+export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav, onOpenAICopilot, onOpenCmdPalette }) => {
   const { user, isAuthenticated, logout, isDarkMode, toggleDarkMode } = useAuth();
   const { viewMode, setViewMode, openCreateTaskModal, stats, searchQuery, setSearchQuery } = useTask();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -90,6 +93,16 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
   ];
 
   const quickActions = [
+    {
+      id: 'focustimer',
+      label: 'Focus Pomodoro Timer',
+      icon: <Timer size={20} color="#ec4899" />,
+      action: () => {
+        setActiveNav('focustimer');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    },
     {
       id: 'team',
       label: 'Team & Members',
@@ -286,8 +299,13 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
           )}
         </div>
 
-        {/* New Task Button */}
-        <div style={{ padding: isCollapsedEffective ? '0.6rem 0.65rem' : '0.85rem 1.15rem' }}>
+        {/* New Task & AI Copilot Action Buttons */}
+        <div style={{
+          padding: isCollapsedEffective ? '0.6rem 0.65rem' : '0.85rem 1.15rem',
+          display: 'flex',
+          flexDirection: isCollapsedEffective ? 'column' : 'column',
+          gap: '0.5rem'
+        }}>
           <button
             onClick={() => { openCreateTaskModal(); setMobileOpen(false); }}
             className="btn btn-primary"
@@ -303,36 +321,60 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
             <PlusCircle size={isCollapsedEffective ? 20 : 18} />
             {!isCollapsedEffective && <span>New Task</span>}
           </button>
+
+          <button
+            onClick={() => { onOpenAICopilot?.(); setMobileOpen(false); }}
+            className="btn"
+            style={{
+              width: '100%',
+              padding: isCollapsedEffective ? '0.65rem 0' : '0.65rem 1rem',
+              justifyContent: 'center',
+              fontSize: isCollapsedEffective ? '0.8rem' : '0.85rem',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(99, 102, 241, 0.12)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              color: '#818cf8',
+              fontWeight: '700',
+              gap: '0.45rem'
+            }}
+            title={isCollapsedEffective ? 'AI Copilot' : ''}
+          >
+            <Bot size={isCollapsedEffective ? 20 : 16} color="#fbbf24" />
+            {!isCollapsedEffective && <span>AI Copilot</span>}
+          </button>
         </div>
 
-        {/* Search Bar */}
+        {/* Search Bar with Ctrl+K Trigger */}
         {!isCollapsedEffective && (
           <div style={{ padding: '0 1.15rem 0.6rem 1.15rem' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              padding: '0.55rem 0.85rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-muted)'
-            }}>
-              <Search size={16} color="var(--text-dim)" />
-              <input
-                type="text"
-                placeholder="Quick search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  color: 'inherit',
-                  fontSize: '0.85rem',
-                  width: '100%'
-                }}
-              />
+            <div
+              onClick={() => onOpenCmdPalette?.()}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.55rem 0.85rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-muted)',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
+                <Search size={16} color="var(--text-dim)" />
+                <span style={{ fontSize: '0.825rem', color: 'var(--text-dim)' }}>Command palette...</span>
+              </div>
+              <span style={{
+                fontSize: '0.68rem',
+                fontWeight: '700',
+                padding: '0.15rem 0.45rem',
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.08)',
+                color: 'var(--text-muted)'
+              }}>
+                Ctrl K
+              </span>
             </div>
           </div>
         )}
