@@ -777,6 +777,116 @@ a:hover {
   }
 }
 
+/* FilterBar Responsive Mobile Grid */
+.filter-bar-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar-search {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+}
+
+.filter-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar-row2 {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+.filter-bar-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .filter-bar-row1 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filter-bar-search {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  .filter-bar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100% !important;
+    gap: 0.5rem;
+  }
+
+  .filter-bar-actions .btn-new-task {
+    grid-column: span 2;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .filter-bar-actions .btn-export-csv {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .filter-bar-actions .view-mode-toggle {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .filter-bar-actions .view-mode-toggle button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .filter-bar-row2 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .filter-bar-dropdowns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100% !important;
+    gap: 0.5rem;
+  }
+
+  .filter-bar-dropdowns select {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 0.8rem !important;
+  }
+
+  .filter-bar-dropdowns select.select-status {
+    grid-column: span 2;
+  }
+
+  .btn-reset-filters {
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
 /* DESKTOP FIXED SIDEBAR POSITION LAYOUT (> 1024px) */
 @media (min-width: 1025px) {
   .mobile-only {
