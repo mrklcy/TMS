@@ -20,6 +20,9 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { RecentActivityView } from './components/RecentActivityView';
 import { NotificationsView } from './components/NotificationsView';
 import { SettingsView } from './components/SettingsView';
+import { CalendarView } from './components/CalendarView';
+import { ProjectsView } from './components/ProjectsView';
+import { TeamView } from './components/TeamView';
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
@@ -36,6 +39,12 @@ const AppContent = () => {
 
   const renderWorkspaceView = () => {
     switch (activeNav) {
+      case 'calendar':
+        return <CalendarView />;
+      case 'projects':
+        return <ProjectsView />;
+      case 'team':
+        return <TeamView />;
       case 'analytics':
         return <AnalyticsView />;
       case 'recent':

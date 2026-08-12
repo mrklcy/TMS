@@ -18,7 +18,10 @@ import {
   Search,
   Bell,
   Sun,
-  Moon
+  Moon,
+  Calendar,
+  FolderKanban,
+  Users
 } from 'lucide-react';
 
 export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav }) => {
@@ -55,6 +58,26 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       }
     },
     {
+      id: 'calendar',
+      label: 'Calendar & Schedule',
+      icon: <Calendar size={20} />,
+      action: () => {
+        setActiveNav('calendar');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    },
+    {
+      id: 'projects',
+      label: 'Project Roadmaps',
+      icon: <FolderKanban size={20} />,
+      action: () => {
+        setActiveNav('projects');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    },
+    {
       id: 'analytics',
       label: 'Analytics',
       icon: <BarChart3 size={20} />,
@@ -67,6 +90,16 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
   ];
 
   const quickActions = [
+    {
+      id: 'team',
+      label: 'Team & Members',
+      icon: <Users size={20} />,
+      action: () => {
+        setActiveNav('team');
+        setCurrentTab('dashboard');
+        setMobileOpen(false);
+      }
+    },
     {
       id: 'recent',
       label: 'Recent Activity',
