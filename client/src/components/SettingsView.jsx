@@ -15,7 +15,13 @@ import {
   AlertCircle,
   Loader2,
   Upload,
-  Image
+  Image as ImageIcon,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Move,
+  Crop,
+  Check
 } from 'lucide-react';
 
 const PRESET_AVATARS = [
@@ -70,6 +76,15 @@ export const SettingsView = () => {
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
+  // Cropper & Zoom Modal States
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
   const [settings, setSettings] = useState({
     displayName: user?.name || '',
     email: user?.email || '',
@@ -123,8 +138,8 @@ export const SettingsView = () => {
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      setError('Selected image is too large. Please select an image under 8MB.');
+    if (file.size > 12 * 1024 * 1024) {
+      setError('Selected image is too large. Please select an image under 12MB.');
       return;
     }
 
@@ -132,15 +147,108 @@ export const SettingsView = () => {
     reader.onload = (event) => {
       const base64Url = event.target?.result;
       if (base64Url) {
-        setSettings(prev => ({ ...prev, avatar: base64Url }));
+        setTempImageSrc(base64Url);
+        setZoomLevel(1);
+        setRotation(0);
+        setPanPosition({ x: 0, y: 0 });
+        setCropModalOpen(true);
         setError('');
-        setIsAvatarModalOpen(false);
       }
     };
     reader.onerror = () => {
       setError('Failed to read selected image file.');
     };
     reader.readAsDataURL(file);
+
+    e.target.value = '';
+  };
+
+  // Dragging handlers for crop preview canvas
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPanPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - panPosition.x,
+        y: e.touches[0].clientY - panPosition.y
+      });
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    setPanPosition({
+      x: e.touches[0].clientX - dragStart.x,
+      y: e.touches[0].clientY - dragStart.y
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Crop & Export High-Res Canvas Image Result
+  const handleCropSave = () => {
+    if (!tempImageSrc) return;
+
+    const img = new window.Image();
+    img.src = tempImageSrc;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 320;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.save();
+
+      ctx.translate(size / 2, size / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(zoomLevel, zoomLevel);
+
+      const aspect = img.width / img.height;
+      let drawW = size;
+      let drawH = size;
+      if (aspect > 1) {
+        drawW = size * aspect;
+      } else {
+        drawH = size / aspect;
+      }
+
+      ctx.drawImage(
+        img,
+        -drawW / 2 + panPosition.x / zoomLevel,
+        -drawH / 2 + panPosition.y / zoomLevel,
+        drawW,
+        drawH
+      );
+
+      ctx.restore();
+
+      const croppedDataUrl = canvas.toDataURL('image/png', 0.92);
+      setSettings(prev => ({ ...prev, avatar: croppedDataUrl }));
+      setCropModalOpen(false);
+      setIsAvatarModalOpen(false);
+      setTempImageSrc(null);
+    };
   };
 
   const handleSave = async () => {
@@ -268,7 +376,7 @@ export const SettingsView = () => {
                 cursor: 'pointer',
                 flexShrink: 0
               }}
-              title="Click to browse & upload photo from your device"
+              title="Click to browse & crop photo from your device"
             >
               <div style={{
                 padding: '3px',
@@ -322,7 +430,7 @@ export const SettingsView = () => {
                   className="btn btn-primary btn-sm"
                   style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', gap: '0.4rem' }}
                 >
-                  <Upload size={14} /> Upload Photo
+                  <Upload size={14} /> Upload & Crop
                 </button>
 
                 <button
@@ -474,6 +582,213 @@ export const SettingsView = () => {
         </button>
       </div>
 
+      {/* Interactive Photo Crop & Zoom Editor Modal */}
+      {cropModalOpen && tempImageSrc && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(5, 8, 16, 0.88)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1100,
+          padding: '1rem'
+        }}>
+          <div className="glass-panel" style={{
+            width: '100%',
+            maxWidth: '520px',
+            borderRadius: 'var(--radius-xl)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.8), var(--shadow-glow)',
+            border: '1px solid var(--border-glow)'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '1.2rem 1.5rem',
+              borderBottom: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(255,255,255,0.02)'
+            }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Crop size={20} color="var(--accent-primary)" /> Crop & Adjust Profile Photo
+              </h3>
+              <button
+                onClick={() => setCropModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.3rem' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body: Crop Viewport */}
+            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+              
+              {/* Interactive Crop Mask Frame */}
+              <div
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                  width: '260px',
+                  height: '260px',
+                  borderRadius: '50%',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: '#090d16',
+                  border: '3px solid var(--accent-primary)',
+                  boxShadow: '0 0 35px rgba(99, 102, 241, 0.45)',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  userSelect: 'none',
+                  touchAction: 'none'
+                }}
+              >
+                {/* Image to be zoomed/panned */}
+                <img
+                  src={tempImageSrc}
+                  alt="Crop Preview"
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    maxWidth: 'none',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    transform: `translate(-50%, -50%) translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel}) rotate(${rotation}deg)`,
+                    transformOrigin: 'center center',
+                    transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                    pointerEvents: 'none'
+                  }}
+                />
+
+                {/* Alignment Grid Overlay */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
+                  border: '1px dashed rgba(255, 255, 255, 0.3)',
+                  borderRadius: '50%'
+                }} />
+              </div>
+
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '-0.2rem' }}>
+                <Move size={14} color="var(--accent-primary)" /> Click & drag image to reposition face
+              </p>
+
+              {/* Zoom & Rotation Controls */}
+              <div style={{
+                width: '100%',
+                padding: '1rem 1.25rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border-subtle)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.85rem'
+              }}>
+                {/* Zoom Slider Row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel(prev => Math.max(1, +(prev - 0.15).toFixed(2)))}
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '0.35rem 0.5rem' }}
+                    title="Zoom Out"
+                  >
+                    <ZoomOut size={16} />
+                  </button>
+
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.05"
+                    value={zoomLevel}
+                    onChange={(e) => setZoomLevel(parseFloat(e.target.value))}
+                    style={{
+                      flex: 1,
+                      accentColor: 'var(--accent-primary)',
+                      cursor: 'pointer'
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setZoomLevel(prev => Math.min(3, +(prev + 0.15).toFixed(2)))}
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '0.35rem 0.5rem' }}
+                    title="Zoom In"
+                  >
+                    <ZoomIn size={16} />
+                  </button>
+
+                  <span style={{ fontSize: '0.825rem', fontWeight: '700', minWidth: '45px', textAlign: 'right', color: 'var(--accent-primary)' }}>
+                    {Math.round(zoomLevel * 100)}%
+                  </span>
+                </div>
+
+                {/* Additional Controls */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRotation(prev => (prev + 90) % 360)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', gap: '0.4rem' }}
+                  >
+                    <RotateCw size={14} /> Rotate 90°
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setZoomLevel(1); setPanPosition({ x: 0, y: 0 }); setRotation(0); }}
+                    className="btn"
+                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.775rem', color: 'var(--text-muted)', background: 'transparent' }}
+                  >
+                    Reset Zoom
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              padding: '1rem 1.5rem',
+              borderTop: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(255,255,255,0.02)'
+            }}>
+              <button
+                onClick={() => setCropModalOpen(false)}
+                className="btn btn-secondary"
+                style={{ padding: '0.6rem 1.25rem' }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleCropSave}
+                className="btn btn-primary"
+                style={{ padding: '0.6rem 1.5rem', gap: '0.45rem', fontWeight: '700' }}
+              >
+                <Check size={18} /> Apply & Crop Photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Avatar Selection Modal */}
       {isAvatarModalOpen && (
         <div style={{
@@ -575,7 +890,7 @@ export const SettingsView = () => {
                   className="btn btn-primary btn-sm"
                   style={{ padding: '0.5rem 1.1rem', gap: '0.4rem' }}
                 >
-                  <Image size={15} /> Browse Files
+                  <ImageIcon size={15} /> Browse Files
                 </button>
               </div>
 
