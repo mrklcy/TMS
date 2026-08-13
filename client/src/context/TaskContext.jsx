@@ -7,55 +7,78 @@ const TaskContext = createContext();
 const initialMockTasks = [
   {
     id: 'task_101',
-    title: '🚀 Launch Marketing Campaign for TaskFlow',
-    description: 'Prepare landing page graphics, social media announcements, and newsletter copy.',
+    title: 'Finish HCI and Design Thinking Report',
+    description: 'MotorPH Course • Design Prototype',
     status: 'in-progress',
-    priority: 'urgent',
-    category: 'Work',
-    dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
-    subtasks: [
-      { id: 'st_1', title: 'Write launch blog post', completed: true },
-      { id: 'st_2', title: 'Design Twitter/X promo banners', completed: true },
-      { id: 'st_3', title: 'Setup email drip sequence', completed: false }
-    ],
+    priority: 'high',
+    category: 'MotorPH Course • Design Prototype',
+    dueDate: '2025-05-29',
+    subtasks: [],
     createdAt: new Date().toISOString()
   },
   {
     id: 'task_102',
-    title: '⚡ Optimize MongoDB Aggregation Queries',
-    description: 'Index user_id and status fields to improve task dashboard load times.',
+    title: 'Study Task Management Best Practices',
+    description: 'Personal • Learning',
     status: 'todo',
-    priority: 'high',
-    category: 'Work',
-    dueDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
-    subtasks: [
-      { id: 'st_4', title: 'Run database explain plan', completed: false },
-      { id: 'st_5', title: 'Add composite compound indexes', completed: false }
-    ],
+    priority: 'medium',
+    category: 'Personal • Learning',
+    dueDate: '2025-05-30',
+    subtasks: [],
     createdAt: new Date().toISOString()
   },
   {
     id: 'task_103',
-    title: '🎨 Rebrand UI Theme with Glassmorphism',
-    description: 'Implement vibrant color palettes, dark mode blurs, and animated micro-interactions.',
-    status: 'completed',
+    title: 'LAB: Web Security Assessment',
+    description: 'IT Security • Parrot OS',
+    status: 'in-progress',
     priority: 'medium',
-    category: 'Ideas',
-    dueDate: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-    subtasks: [
-      { id: 'st_6', title: 'Define HSL CSS token variables', completed: true },
-      { id: 'st_7', title: 'Build responsive modal components', completed: true }
-    ],
+    category: 'IT Security • Parrot OS',
+    dueDate: '2025-05-28',
+    subtasks: [],
     createdAt: new Date().toISOString()
   },
   {
     id: 'task_104',
-    title: '📑 Weekly Team Sync & Backlog Refinement',
-    description: 'Discuss sprint velocity, unblock dependencies, and assign tickets.',
+    title: 'Read Manga / Manhwa',
+    description: 'Personal • Relaxation',
     status: 'todo',
     priority: 'low',
-    category: 'Project',
-    dueDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+    category: 'Personal • Relaxation',
+    dueDate: '2025-05-31',
+    subtasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'task_105',
+    title: 'Practice Guitar',
+    description: 'Hobbies • Music',
+    status: 'todo',
+    priority: 'low',
+    category: 'Hobbies • Music',
+    dueDate: '2025-06-01',
+    subtasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'task_106',
+    title: 'Read UX Design Principles',
+    description: 'Learning',
+    status: 'todo',
+    priority: 'low',
+    category: 'Learning',
+    dueDate: '2025-05-31',
+    subtasks: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'task_107',
+    title: 'Organize Study Notes',
+    description: 'Personal',
+    status: 'todo',
+    priority: 'medium',
+    category: 'Personal',
+    dueDate: '2025-05-30',
     subtasks: [],
     createdAt: new Date().toISOString()
   }

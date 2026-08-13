@@ -6,10 +6,10 @@ import {
   ChevronRight,
   Clock,
   CheckCircle2,
-  AlertCircle,
   PlusCircle,
-  Filter,
-  Tag
+  Tag,
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 
 export const CalendarView = () => {
@@ -53,57 +53,162 @@ export const CalendarView = () => {
 
   const selectedDayTasks = getTasksForDay(selectedDate);
 
+  const getPriorityStyle = (priority) => {
+    switch (priority) {
+      case 'urgent':
+      case 'high':
+        return { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', label: 'HIGH' };
+      case 'medium':
+        return { bg: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', label: 'MEDIUM' };
+      case 'low':
+      default:
+        return { bg: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', label: 'LOW' };
+    }
+  };
+
   return (
-    <div>
-      {/* Header */}
+    <div style={{
+      padding: '1.75rem 2rem',
+      color: '#f8fafc',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      minHeight: '100vh',
+      boxSizing: 'border-box'
+    }}>
+      {/* Header Section */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: '1.75rem',
         flexWrap: 'wrap',
-        gap: '1rem'
+        gap: '1rem',
+        background: 'rgba(21, 10, 48, 0.65)',
+        backdropFilter: 'blur(16px)',
+        padding: '1.25rem 1.5rem',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
       }}>
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <CalendarIcon color="var(--accent-primary)" size={28} /> Interactive Calendar Schedule
+          <h1 style={{ fontSize: '1.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#ffffff', margin: 0 }}>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #6d28d9, #8b5cf6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 12px rgba(139, 92, 246, 0.4)'
+            }}>
+              <CalendarIcon color="#ffffff" size={20} />
+            </div>
+            Interactive Calendar Schedule
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.35rem', margin: 0 }}>
             Track task due dates, upcoming milestones, and delivery deadlines across the month.
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button onClick={today} className="btn btn-secondary btn-sm">
+          <button
+            onClick={today}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#ffffff',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
             Today
           </button>
-          <button onClick={() => openCreateTaskModal()} className="btn btn-primary btn-sm" style={{ gap: '0.4rem' }}>
+
+          <button
+            onClick={() => openCreateTaskModal()}
+            style={{
+              padding: '0.5rem 1.15rem',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #6d28d9, #8b5cf6)',
+              border: 'none',
+              color: '#ffffff',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              boxShadow: '0 4px 14px rgba(109, 40, 217, 0.4)',
+              transition: 'all 0.2s ease'
+            }}
+          >
             <PlusCircle size={16} /> Schedule Task
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-        {/* Main Calendar Viewport */}
-        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
+      {/* Main Grid: 2 Columns */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: '1.5rem' }}>
+        
+        {/* LEFT COLUMN: Main Calendar Viewport */}
+        <div style={{
+          background: 'rgba(21, 10, 48, 0.65)',
+          backdropFilter: 'blur(16px)',
+          padding: '1.5rem',
+          borderRadius: '20px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+        }}>
           {/* Calendar Header Controls */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: '1.25rem',
-            paddingBottom: '0.85rem',
-            borderBottom: '1px solid var(--border-subtle)'
+            paddingBottom: '1rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
           }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
               {monthNames[month]} {year}
             </h3>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button onClick={prevMonth} className="btn btn-secondary btn-sm" style={{ padding: '0.35rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                onClick={prevMonth}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
                 <ChevronLeft size={18} />
               </button>
-              <button onClick={nextMonth} className="btn btn-secondary btn-sm" style={{ padding: '0.35rem' }}>
+              <button
+                onClick={nextMonth}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -115,9 +220,10 @@ export const CalendarView = () => {
             gridTemplateColumns: 'repeat(7, 1fr)',
             textAlign: 'center',
             fontWeight: '700',
-            fontSize: '0.8rem',
-            color: 'var(--text-dim)',
-            marginBottom: '0.75rem'
+            fontSize: '0.78rem',
+            letterSpacing: '0.05em',
+            color: '#a78bfa',
+            marginBottom: '0.85rem'
           }}>
             <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
           </div>
@@ -126,11 +232,11 @@ export const CalendarView = () => {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: '0.4rem'
+            gap: '0.45rem'
           }}>
             {/* Empty slots for month start */}
             {Array.from({ length: firstDayIndex }).map((_, i) => (
-              <div key={`empty-${i}`} style={{ height: '56px', opacity: 0.2 }} />
+              <div key={`empty-${i}`} style={{ height: '62px', opacity: 0.15 }} />
             ))}
 
             {/* Month Days */}
@@ -145,23 +251,32 @@ export const CalendarView = () => {
                   key={`day-${day}`}
                   onClick={() => setSelectedDate(day)}
                   style={{
-                    height: '58px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: isSelected ? 'rgba(99, 102, 241, 0.22)' : 'rgba(255,255,255,0.03)',
-                    border: isSelected ? '2px solid var(--accent-primary)' : isToday ? '1px solid var(--accent-secondary)' : '1px solid rgba(255,255,255,0.05)',
-                    padding: '0.35rem',
+                    height: '62px',
+                    borderRadius: '12px',
+                    background: isSelected
+                      ? 'linear-gradient(135deg, rgba(109, 40, 217, 0.35), rgba(124, 58, 237, 0.25))'
+                      : isToday
+                      ? 'rgba(139, 92, 246, 0.12)'
+                      : 'rgba(255, 255, 255, 0.03)',
+                    border: isSelected
+                      ? '2px solid #8b5cf6'
+                      : isToday
+                      ? '1px solid rgba(139, 92, 246, 0.5)'
+                      : '1px solid rgba(255, 255, 255, 0.05)',
+                    padding: '0.4rem 0.5rem',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
+                    boxShadow: isSelected ? '0 0 15px rgba(139, 92, 246, 0.3)' : 'none',
                     transition: 'all 0.2s ease'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{
-                      fontSize: '0.825rem',
+                      fontSize: '0.85rem',
                       fontWeight: isSelected || isToday ? '800' : '600',
-                      color: isToday ? 'var(--accent-secondary)' : isSelected ? '#fff' : 'var(--text-muted)'
+                      color: isSelected ? '#ffffff' : isToday ? '#a78bfa' : '#cbd5e1'
                     }}>
                       {day}
                     </span>
@@ -169,26 +284,27 @@ export const CalendarView = () => {
                       <span style={{
                         fontSize: '0.65rem',
                         fontWeight: '800',
-                        padding: '0.1rem 0.35rem',
-                        borderRadius: '8px',
-                        background: 'var(--accent-primary)',
-                        color: '#fff'
+                        padding: '0.1rem 0.4rem',
+                        borderRadius: '10px',
+                        background: '#6d28d9',
+                        color: '#ffffff',
+                        boxShadow: '0 2px 6px rgba(109, 40, 217, 0.4)'
                       }}>
                         {dayTasks.length}
                       </span>
                     )}
                   </div>
 
-                  {/* Task Indicator Pills */}
-                  <div style={{ display: 'flex', gap: '2px', overflow: 'hidden' }}>
-                    {dayTasks.slice(0, 3).map(t => (
+                  {/* Task Indicator Lines */}
+                  <div style={{ display: 'flex', gap: '3px' }}>
+                    {dayTasks.slice(0, 3).map((t, tIdx) => (
                       <div
-                        key={t.id || t._id}
+                        key={t.id || t._id || tIdx}
                         style={{
                           height: '4px',
                           flex: 1,
                           borderRadius: '2px',
-                          background: t.priority === 'urgent' ? '#ef4444' : t.priority === 'high' ? '#f59e0b' : 'var(--accent-primary)'
+                          background: t.priority === 'urgent' || t.priority === 'high' ? '#ef4444' : t.priority === 'medium' ? '#3b82f6' : '#22c55e'
                         }}
                       />
                     ))}
@@ -199,47 +315,117 @@ export const CalendarView = () => {
           </div>
         </div>
 
-        {/* Day Tasks Sidebar Details */}
-        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Clock size={18} color="var(--accent-primary)" /> Tasks Due on {monthNames[month]} {selectedDate}, {year}
-          </h3>
+        {/* RIGHT COLUMN: Selected Day Tasks Detail Panel */}
+        <div style={{
+          background: 'rgba(21, 10, 48, 0.65)',
+          backdropFilter: 'blur(16px)',
+          padding: '1.5rem',
+          borderRadius: '20px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1.25rem',
+            paddingBottom: '1rem',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Clock size={18} color="#a78bfa" />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
+                Tasks Due on {monthNames[month]} {selectedDate}, {year}
+              </h3>
+            </div>
+            <span style={{
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              padding: '0.2rem 0.6rem',
+              borderRadius: '12px',
+              background: 'rgba(139, 92, 246, 0.2)',
+              color: '#c4b5fd',
+              border: '1px solid rgba(139, 92, 246, 0.3)'
+            }}>
+              {selectedDayTasks.length} task{selectedDayTasks.length === 1 ? '' : 's'}
+            </span>
+          </div>
 
           {selectedDayTasks.length === 0 ? (
             <div style={{
-              padding: '2.5rem 1rem',
+              flex: 1,
+              minHeight: '240px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
               textAlign: 'center',
-              color: 'var(--text-dim)',
-              background: 'rgba(255,255,255,0.02)',
-              borderRadius: 'var(--radius-md)'
+              padding: '2rem 1rem',
+              color: '#94a3b8',
+              background: 'rgba(255, 255, 255, 0.02)',
+              borderRadius: '14px',
+              border: '1px dashed rgba(255, 255, 255, 0.08)'
             }}>
-              <CheckCircle2 size={36} color="var(--accent-success)" style={{ opacity: 0.6, marginBottom: '0.5rem' }} />
-              <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>No Tasks Scheduled</p>
-              <p style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>You're all clear for this date.</p>
+              <CheckCircle2 size={42} color="#4ade80" style={{ opacity: 0.8, marginBottom: '0.75rem' }} />
+              <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: '#ffffff', margin: 0 }}>
+                No Tasks Scheduled
+              </h4>
+              <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginTop: '0.35rem', margin: 0 }}>
+                You're all clear for {monthNames[month]} {selectedDate}.
+              </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {selectedDayTasks.map(task => (
-                <div
-                  key={task.id || task._id}
-                  className="task-card-item"
-                  style={{ padding: '0.9rem 1.1rem' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                    <span className={`badge badge-${task.priority}`}>
-                      {task.priority}
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <Tag size={12} /> {task.category}
-                    </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {selectedDayTasks.map(task => {
+                const prio = getPriorityStyle(task.priority);
+                return (
+                  <div
+                    key={task.id || task._id}
+                    style={{
+                      padding: '1rem 1.15rem',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderLeft: `4px solid ${prio.color}`,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '8px',
+                        fontSize: '0.68rem',
+                        fontWeight: '800',
+                        letterSpacing: '0.04em',
+                        background: prio.bg,
+                        color: prio.color,
+                        border: prio.border
+                      }}>
+                        {prio.label}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Tag size={12} color="#a78bfa" /> {task.category || 'Work'}
+                      </span>
+                    </div>
+
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#ffffff', margin: 0, lineHeight: '1.3' }}>
+                      {task.title}
+                    </h4>
+
+                    {task.description && (
+                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.4rem', margin: 0, lineHeight: '1.4' }}>
+                        {task.description}
+                      </p>
+                    )}
                   </div>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.35rem' }}>{task.title}</h4>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>{task.description}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

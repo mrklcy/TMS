@@ -26,6 +26,7 @@ import { TeamView } from './components/TeamView';
 import { FocusTimerView } from './components/FocusTimerView';
 import { AICopilotModal } from './components/AICopilotModal';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
+import { DashboardView } from './components/DashboardView';
 import { exportTasksToCSV } from './utils/exportUtils';
 
 const AppContent = () => {
@@ -77,35 +78,7 @@ const AppContent = () => {
       case 'list':
       case 'overview':
       default:
-        return (
-          <div>
-            {/* Dashboard Workspace Header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '1.5rem',
-              flexWrap: 'wrap',
-              gap: '1rem'
-            }}>
-              <div>
-                <h1 style={{ fontSize: '1.8rem', fontWeight: '800' }}>Task Management Workspace</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                  Track tasks, organize subtasks, and monitor completion metrics.
-                </p>
-              </div>
-            </div>
-
-            {/* Dashboard Analytics Bar */}
-            <DashboardStats />
-
-            {/* Filters & Control Bar */}
-            <FilterBar />
-
-            {/* View Mode Component (Kanban vs List) */}
-            {viewMode === 'kanban' ? <KanbanBoard /> : <TaskList />}
-          </div>
-        );
+        return <DashboardView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
     }
   };
 
