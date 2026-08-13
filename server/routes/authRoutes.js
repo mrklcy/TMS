@@ -228,4 +228,20 @@ router.put('/profile', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/auth/users
+// @desc    Get list of all registered users
+router.get('/users', async (req, res) => {
+  try {
+    if (isDbConnected()) {
+      const users = await User.find().select('-password');
+      return res.json({ count: users.length, mode: 'MongoDB Atlas', users });
+    } else {
+      const users = inMemoryUsers.map(u => ({ id: u.id, name: u.name, email: u.email, avatar: u.avatar, createdAt: u.createdAt }));
+      return res.json({ count: users.length, mode: 'In-Memory Fallback Store', users });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching users', error: error.message });
+  }
+});
+
 module.exports = router;
