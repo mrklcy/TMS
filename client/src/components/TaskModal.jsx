@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTask } from '../context/TaskContext';
-import { X, Plus, Trash2, CheckSquare, Layers, FileText, Zap } from 'lucide-react';
+import { X, Plus, Trash2, CheckSquare, FileText, Zap } from 'lucide-react';
 
 export const TaskModal = () => {
   const { isTaskModalOpen, editingTask, closeTaskModal, createTask, bulkCreateTasks, updateTask } = useTask();
@@ -86,10 +86,10 @@ export const TaskModal = () => {
   // Parse bulk text lines
   const parsedBulkTasks = bulkText
     .split('\n')
-    .map(line => line.replace(/^[\s\-\*\•\d\.\)]+/, '').trim()) // remove bullet points like "- ", "* ", "1. "
+    .map(line => line.replace(/^[\s\-\*\•\d\.\)]+/, '').trim())
     .filter(line => line.length > 0)
-    .map(title => ({
-      title,
+    .map(tTitle => ({
+      title: tTitle,
       description: '',
       status: 'todo',
       priority: bulkPriority,
@@ -105,13 +105,43 @@ export const TaskModal = () => {
   };
 
   return (
-    <div className="modal-overlay" onClick={closeTaskModal}>
-      <div className="modal-content animate-fade-in" style={{ maxWidth: '640px' }} onClick={e => e.stopPropagation()}>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(15, 23, 42, 0.6)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem'
+    }} onClick={closeTaskModal}>
+      <div style={{
+        background: '#ffffff',
+        borderRadius: '24px',
+        padding: '1.75rem',
+        width: '100%',
+        maxWidth: '640px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        boxSizing: 'border-box',
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }} onClick={e => e.stopPropagation()}>
+        
         {/* Header Tabs */}
-        <div className="modal-header">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1.25rem',
+          borderBottom: '1px solid #f1f5f9',
+          paddingBottom: '0.75rem'
+        }}>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             {editingTask ? (
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '700' }}>Edit Task</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>Edit Task</h3>
             ) : (
               <>
                 <button
@@ -121,17 +151,18 @@ export const TaskModal = () => {
                     background: 'none',
                     border: 'none',
                     fontSize: '1.05rem',
-                    fontWeight: '700',
-                    color: activeTab === 'single' ? '#ffffff' : 'var(--text-muted)',
-                    borderBottom: activeTab === 'single' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                    fontWeight: '800',
+                    color: activeTab === 'single' ? '#6d28d9' : '#94a3b8',
+                    borderBottom: activeTab === 'single' ? '3px solid #6d28d9' : '3px solid transparent',
                     paddingBottom: '0.4rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem'
+                    gap: '0.4rem',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <FileText size={16} /> Single Task
+                  <FileText size={18} /> Single Task
                 </button>
 
                 <button
@@ -141,68 +172,138 @@ export const TaskModal = () => {
                     background: 'none',
                     border: 'none',
                     fontSize: '1.05rem',
-                    fontWeight: '700',
-                    color: activeTab === 'bulk' ? '#ffffff' : 'var(--text-muted)',
-                    borderBottom: activeTab === 'bulk' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                    fontWeight: '800',
+                    color: activeTab === 'bulk' ? '#6d28d9' : '#94a3b8',
+                    borderBottom: activeTab === 'bulk' ? '3px solid #6d28d9' : '3px solid transparent',
                     paddingBottom: '0.4rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem'
+                    gap: '0.4rem',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <Zap size={16} color="#fbbf24" /> Paste Multi-Tasks
+                  <Zap size={18} color="#d97706" /> Paste Multi-Tasks
                 </button>
               </>
             )}
           </div>
 
-          <button onClick={closeTaskModal} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+          <button
+            onClick={closeTaskModal}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.25rem'
+            }}
+          >
             <X size={20} />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="modal-body">
+        <div>
           {activeTab === 'single' ? (
             /* Single Task Form */
-            <form onSubmit={handleSingleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Task Title *</label>
+            <form onSubmit={handleSingleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Task Title *
+                </label>
                 <input
                   type="text"
-                  className="form-input"
                   placeholder="e.g. Complete quarterly budget analysis"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   required
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '12px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.875rem',
+                    color: '#0f172a',
+                    background: '#ffffff',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Description</label>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Description
+                </label>
                 <textarea
-                  className="form-textarea"
                   rows={3}
                   placeholder="Add details, notes, or instructions..."
                   value={description}
                   onChange={e => setDescription(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '12px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.875rem',
+                    color: '#0f172a',
+                    background: '#ffffff',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    resize: 'vertical'
+                  }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Status</label>
-                  <select className="form-select" value={status} onChange={e => setStatus(e.target.value)}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                    Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={e => setStatus(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     <option value="todo">To Do</option>
                     <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Priority</label>
-                  <select className="form-select" value={priority} onChange={e => setPriority(e.target.value)}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                    Priority
+                  </label>
+                  <select
+                    value={priority}
+                    onChange={e => setPriority(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
@@ -210,9 +311,25 @@ export const TaskModal = () => {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Category</label>
-                  <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                    Category
+                  </label>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     <option value="Work">Work</option>
                     <option value="Personal">Personal</option>
                     <option value="Ideas">Ideas</option>
@@ -222,30 +339,69 @@ export const TaskModal = () => {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Due Date</label>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Due Date
+                </label>
                 <input
                   type="date"
-                  className="form-input"
                   value={dueDate}
                   onChange={e => setDueDate(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '12px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.875rem',
+                    color: '#0f172a',
+                    background: '#ffffff',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
 
               {/* Subtasks Section */}
-              <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1rem' }}>
-                <label className="form-label">Subtask Checklist</label>
+              <div style={{ marginTop: '0.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.5rem' }}>
+                  Subtask Checklist
+                </label>
 
                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
                   <input
                     type="text"
-                    className="form-input"
                     placeholder="Add subtask item..."
                     value={newSubtaskTitle}
                     onChange={e => setNewSubtaskTitle(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddSubtask(e); } }}
+                    style={{
+                      flex: 1,
+                      padding: '0.6rem 0.85rem',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      outline: 'none'
+                    }}
                   />
-                  <button type="button" onClick={handleAddSubtask} className="btn btn-secondary">
+                  <button
+                    type="button"
+                    onClick={handleAddSubtask}
+                    style={{
+                      padding: '0.6rem 1rem',
+                      borderRadius: '12px',
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      color: '#334155',
+                      fontSize: '0.85rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
+                    }}
+                  >
                     <Plus size={16} /> Add
                   </button>
                 </div>
@@ -258,20 +414,21 @@ export const TaskModal = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '0.5rem 0.75rem',
-                        background: 'rgba(255,255,255,0.04)',
-                        borderRadius: 'var(--radius-sm)',
+                        padding: '0.55rem 0.85rem',
+                        background: '#f8fafc',
+                        border: '1px solid #f1f5f9',
+                        borderRadius: '10px',
                         fontSize: '0.875rem'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <CheckSquare size={16} color="var(--accent-secondary)" />
-                        <span>{st.title}</span>
+                        <CheckSquare size={16} color="#16a34a" />
+                        <span style={{ color: '#0f172a', fontWeight: '600' }}>{st.title}</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveSubtask(st.id || st._id)}
-                        style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -280,53 +437,108 @@ export const TaskModal = () => {
                 </div>
               </div>
 
-              <div className="modal-footer" style={{ padding: '1rem 0 0 0', borderTop: 'none' }}>
-                <button type="button" onClick={closeTaskModal} className="btn btn-secondary">
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={closeTaskModal}
+                  style={{
+                    padding: '0.65rem 1.4rem',
+                    borderRadius: '12px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#334155',
+                    fontSize: '0.875rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.65rem 1.6rem',
+                    borderRadius: '12px',
+                    background: '#6d28d9',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.875rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(109, 40, 217, 0.3)'
+                  }}
+                >
                   {editingTask ? 'Save Changes' : 'Create Task'}
                 </button>
               </div>
             </form>
           ) : (
             /* Bulk Import Mode */
-            <form onSubmit={handleBulkSubmit}>
+            <form onSubmit={handleBulkSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
               <div style={{
                 padding: '0.85rem 1rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(99, 102, 241, 0.12)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
-                color: '#c7d2fe',
-                fontSize: '0.875rem',
-                marginBottom: '1.25rem',
+                borderRadius: '12px',
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                color: '#92400e',
+                fontSize: '0.85rem',
+                fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.6rem'
               }}>
-                <Zap size={20} color="#fbbf24" />
+                <Zap size={20} color="#d97706" />
                 <span>
                   Paste your task list below (one task per line). The system will automatically parse and create all tasks instantly!
                 </span>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Paste Tasks List (One per line)</label>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Paste Tasks List (One per line)
+                </label>
                 <textarea
-                  className="form-textarea"
                   rows={7}
                   placeholder={`Finish project report\nBuy groceries for the week\nSchedule team retrospective\nReview pull requests`}
                   value={bulkText}
                   onChange={e => setBulkText(e.target.value)}
-                  style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}
                   required
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '12px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.875rem',
+                    fontFamily: 'monospace',
+                    color: '#0f172a',
+                    background: '#ffffff',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Default Category</label>
-                  <select className="form-select" value={bulkCategory} onChange={e => setBulkCategory(e.target.value)}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                    Default Category
+                  </label>
+                  <select
+                    value={bulkCategory}
+                    onChange={e => setBulkCategory(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     <option value="Work">Work</option>
                     <option value="Personal">Personal</option>
                     <option value="Ideas">Ideas</option>
@@ -335,9 +547,25 @@ export const TaskModal = () => {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Default Priority</label>
-                  <select className="form-select" value={bulkPriority} onChange={e => setBulkPriority(e.target.value)}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                    Default Priority
+                  </label>
+                  <select
+                    value={bulkPriority}
+                    onChange={e => setBulkPriority(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
@@ -347,19 +575,46 @@ export const TaskModal = () => {
               </div>
 
               {parsedBulkTasks.length > 0 && (
-                <div style={{ fontSize: '0.875rem', fontWeight: '700', color: 'var(--accent-success)', marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#16a34a' }}>
                   ✓ {parsedBulkTasks.length} task(s) detected and ready to import.
                 </div>
               )}
 
-              <div className="modal-footer" style={{ padding: '1rem 0 0 0', borderTop: 'none' }}>
-                <button type="button" onClick={closeTaskModal} className="btn btn-secondary">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={closeTaskModal}
+                  style={{
+                    padding: '0.65rem 1.4rem',
+                    borderRadius: '12px',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#334155',
+                    fontSize: '0.875rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
                   disabled={parsedBulkTasks.length === 0}
+                  style={{
+                    padding: '0.65rem 1.6rem',
+                    borderRadius: '12px',
+                    background: '#6d28d9',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.875rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    boxShadow: '0 4px 14px rgba(109, 40, 217, 0.3)',
+                    opacity: parsedBulkTasks.length === 0 ? 0.6 : 1
+                  }}
                 >
                   <Zap size={18} /> Auto-Create {parsedBulkTasks.length || ''} Tasks
                 </button>
