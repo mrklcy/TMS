@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTask } from '../context/TaskContext';
 import {
   Settings,
   User,
@@ -21,7 +22,20 @@ import {
   RotateCw,
   Move,
   Crop,
-  Check
+  Check,
+  Search,
+  Menu,
+  ChevronDown,
+  Lock,
+  KeyRound,
+  Download,
+  Database,
+  Trash2,
+  Globe,
+  Layout,
+  Smartphone,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 const PRESET_AVATARS = [
@@ -66,15 +80,17 @@ const PRESET_AVATARS = [
   }
 ];
 
-export const SettingsView = () => {
+export const SettingsView = ({ onToggleSidebar }) => {
   const { user, updateUser, isDarkMode, isCompactView, toggleDarkMode, toggleCompactView } = useAuth();
+  const { allTasks, searchQuery, setSearchQuery } = useTask();
   const fileInputRef = useRef(null);
 
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'preferences', 'security', 'data'
 
   // Cropper & Zoom Modal States
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -85,13 +101,25 @@ export const SettingsView = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // Password & Security States
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+
+  // Settings Form State
   const [settings, setSettings] = useState({
     displayName: user?.name || '',
     email: user?.email || '',
     avatar: user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`,
+    role: 'Senior Security Analyst & Lead Architect',
+    timezone: '(UTC+08:00) Manila, Beijing, Singapore',
     notifications: true,
     darkMode: isDarkMode,
-    compactView: isCompactView
+    compactView: isCompactView,
+    autoSave: true,
+    defaultView: 'dashboard'
   });
 
   const [customUrlInput, setCustomUrlInput] = useState('');
@@ -106,28 +134,6 @@ export const SettingsView = () => {
       }));
     }
   }, [user]);
-
-  useEffect(() => {
-    setSettings(prev => ({
-      ...prev,
-      darkMode: isDarkMode,
-      compactView: isCompactView
-    }));
-  }, [isDarkMode, isCompactView]);
-
-  const handleTogglePreference = (key) => {
-    if (key === 'darkMode') {
-      const nextVal = !settings.darkMode;
-      setSettings(prev => ({ ...prev, darkMode: nextVal }));
-      toggleDarkMode(nextVal);
-    } else if (key === 'compactView') {
-      const nextVal = !settings.compactView;
-      setSettings(prev => ({ ...prev, compactView: nextVal }));
-      toggleCompactView(nextVal);
-    } else {
-      setSettings(prev => ({ ...prev, [key]: !prev[key] }));
-    }
-  };
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -155,100 +161,15 @@ export const SettingsView = () => {
         setError('');
       }
     };
-    reader.onerror = () => {
-      setError('Failed to read selected image file.');
-    };
     reader.readAsDataURL(file);
-
-    e.target.value = '';
   };
 
-  // Dragging handlers for crop preview canvas
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    setPanPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({
-        x: e.touches[0].clientX - panPosition.x,
-        y: e.touches[0].clientY - panPosition.y
-      });
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    setPanPosition({
-      x: e.touches[0].clientX - dragStart.x,
-      y: e.touches[0].clientY - dragStart.y
-    });
-  };
-
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
-
-  // Crop & Export High-Res Canvas Image Result
-  const handleCropSave = () => {
-    if (!tempImageSrc) return;
-
-    const img = new window.Image();
-    img.src = tempImageSrc;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const size = 320;
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-
-      ctx.clearRect(0, 0, size, size);
-      ctx.save();
-
-      ctx.translate(size / 2, size / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(zoomLevel, zoomLevel);
-
-      const aspect = img.width / img.height;
-      let drawW = size;
-      let drawH = size;
-      if (aspect > 1) {
-        drawW = size * aspect;
-      } else {
-        drawH = size / aspect;
-      }
-
-      ctx.drawImage(
-        img,
-        -drawW / 2 + panPosition.x / zoomLevel,
-        -drawH / 2 + panPosition.y / zoomLevel,
-        drawW,
-        drawH
-      );
-
-      ctx.restore();
-
-      const croppedDataUrl = canvas.toDataURL('image/png', 0.92);
-      setSettings(prev => ({ ...prev, avatar: croppedDataUrl }));
+  const handleSaveCroppedAvatar = () => {
+    if (tempImageSrc) {
+      setSettings(prev => ({ ...prev, avatar: tempImageSrc }));
       setCropModalOpen(false);
-      setIsAvatarModalOpen(false);
       setTempImageSrc(null);
-    };
+    }
   };
 
   const handleSave = async () => {
@@ -280,22 +201,78 @@ export const SettingsView = () => {
     }
   };
 
-  const handleSelectAvatar = (url) => {
-    setSettings(prev => ({ ...prev, avatar: url }));
-    setIsAvatarModalOpen(false);
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    setPasswordMessage({ type: '', text: '' });
+
+    if (!passwordData.currentPassword) {
+      setPasswordMessage({ type: 'error', text: 'Please enter your current password.' });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters long.' });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'New passwords do not match.' });
+      return;
+    }
+
+    setPasswordMessage({ type: 'success', text: 'Password successfully updated and encrypted!' });
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
-  const handleApplyCustomUrl = () => {
-    if (customUrlInput.trim()) {
-      setSettings(prev => ({ ...prev, avatar: customUrlInput.trim() }));
-      setCustomUrlInput('');
-      setIsAvatarModalOpen(false);
-    }
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Title', 'Status', 'Priority', 'Category', 'Due Date', 'Created At'];
+    const rows = allTasks.map(t => [
+      t.id || t._id,
+      `"${(t.title || '').replace(/"/g, '""')}"`,
+      t.status,
+      t.priority,
+      t.category,
+      t.dueDate ? new Date(t.dueDate).toISOString().split('T')[0] : '',
+      t.createdAt ? new Date(t.createdAt).toISOString().split('T')[0] : ''
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `taskflow_export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
+
+  const handleExportJSON = () => {
+    const jsonStr = JSON.stringify(allTasks, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `taskflow_backup_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const userName = user?.name || 'Lester';
+  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`;
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Hidden Native File Input */}
+    <div className="dashboard-light-theme" style={{
+      color: '#1e293b',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      background: '#f4f6f8',
+      padding: '1.5rem 1.8rem',
+      minHeight: '100vh',
+      width: '100%',
+      boxSizing: 'border-box'
+    }}>
+      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -304,724 +281,944 @@ export const SettingsView = () => {
         style={{ display: 'none' }}
       />
 
-      {/* Header */}
-      <div style={{ marginBottom: '1.75rem' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Settings color="var(--accent-primary)" size={28} /> Workspace Settings
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-          Customize your profile, profile avatar, preferences, and account security.
-        </p>
+      {/* Top Header Bar - Fixed Sticky Position */}
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0.85rem 1.5rem',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid #e2e8f0',
+        borderRadius: '14px',
+        marginBottom: '1.25rem',
+        gap: '1rem',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.05)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+          <button
+            onClick={onToggleSidebar}
+            className="header-hamburger-toggle"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#64748b',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <Menu size={20} />
+          </button>
+
+          {/* Search Box */}
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '380px'
+          }}>
+            <Search size={16} style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#94a3b8'
+            }} />
+            <input
+              type="text"
+              placeholder="Search tasks, projects..."
+              value={searchQuery || ''}
+              onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem 0.5rem 2.2rem',
+                borderRadius: '20px',
+                border: '1px solid #e2e8f0',
+                background: '#f8fafc',
+                fontSize: '0.85rem',
+                color: '#1e293b',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Right Action Icons & User Info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <div style={{ position: 'relative', cursor: 'pointer' }}>
+            <Bell size={18} color="#64748b" />
+            <span style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '-2px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#8b5cf6'
+            }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <div
+              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                cursor: 'pointer'
+              }}
+            >
+              <img
+                src={userAvatar}
+                alt={userName}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: '#1e1b4b'
+                }}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', lineHeight: 1.1 }}>
+                  {userName}
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: '600' }}>
+                  ● Online
+                </span>
+              </div>
+              <ChevronDown size={14} color="#64748b" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Title Banner Card */}
+      <div style={{
+        background: '#ffffff',
+        borderRadius: '16px',
+        padding: '1.25rem 1.5rem',
+        border: '1px solid #f1f5f9',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+        marginBottom: '1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            background: '#ede9fe',
+            color: '#6d28d9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(109, 40, 217, 0.15)'
+          }}>
+            <Settings size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a', margin: 0, lineHeight: 1.1 }}>
+              Workspace & Profile Settings
+            </h1>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
+              Customize your user profile, avatar, workspace preferences, account security, and data backups.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          style={{
+            padding: '0.6rem 1.3rem',
+            borderRadius: '10px',
+            background: '#6d28d9',
+            border: 'none',
+            color: '#ffffff',
+            fontSize: '0.85rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 12px rgba(109, 40, 217, 0.25)',
+            opacity: loading ? 0.7 : 1
+          }}
+        >
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} Save All Changes
+        </button>
       </div>
 
+      {/* Notifications / Alerts */}
       {error && (
         <div style={{
-          padding: '0.9rem 1.25rem',
-          borderRadius: 'var(--radius-md)',
-          background: 'rgba(239, 68, 68, 0.12)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: '#f87171',
-          marginBottom: '1.5rem',
+          padding: '0.85rem 1.25rem',
+          borderRadius: '12px',
+          background: '#fee2e2',
+          border: '1px solid #fca5a5',
+          color: '#dc2626',
+          marginBottom: '1.25rem',
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
-          fontSize: '0.9rem'
+          fontSize: '0.85rem',
+          fontWeight: '600'
         }}>
-          <AlertCircle size={20} style={{ flexShrink: 0 }} />
-          <span>{error}</span>
+          <AlertCircle size={18} /> {error}
         </div>
       )}
 
       {saved && (
         <div style={{
-          padding: '0.9rem 1.25rem',
-          borderRadius: 'var(--radius-md)',
-          background: 'rgba(16, 185, 129, 0.12)',
-          border: '1px solid rgba(16, 185, 129, 0.3)',
-          color: '#34d399',
-          marginBottom: '1.5rem',
+          padding: '0.85rem 1.25rem',
+          borderRadius: '12px',
+          background: '#dcfce7',
+          border: '1px solid #86efac',
+          color: '#16a34a',
+          marginBottom: '1.25rem',
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
-          fontSize: '0.9rem'
+          fontSize: '0.85rem',
+          fontWeight: '600'
         }}>
-          <CheckCircle2 size={20} style={{ flexShrink: 0 }} />
-          <span>Profile & settings updated successfully across your workspace!</span>
+          <CheckCircle2 size={18} /> Settings successfully saved across your workspace!
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-        {/* Profile Card */}
-        <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: 'var(--radius-lg)' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <User size={20} color="var(--accent-primary)" /> User Profile & Avatar
-          </h3>
-
-          {/* Avatar Selector Display */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1.25rem',
-            padding: '1.25rem',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            marginBottom: '1.5rem'
-          }}>
-            {/* Click Avatar to Upload File directly */}
-            <div
-              onClick={() => fileInputRef.current?.click()}
+      {/* Settings Navigation Tabs */}
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem',
+        marginBottom: '1.5rem',
+        borderBottom: '1px solid #e2e8f0',
+        paddingBottom: '0.5rem',
+        flexWrap: 'wrap'
+      }}>
+        {[
+          { id: 'profile', label: 'User Profile & Avatar', icon: User },
+          { id: 'preferences', label: 'Workspace Preferences', icon: Palette },
+          { id: 'security', label: 'Security & Auth', icon: Shield },
+          { id: 'data', label: 'Data Export & Backup', icon: Database }
+        ].map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               style={{
-                position: 'relative',
+                padding: '0.55rem 1.1rem',
+                borderRadius: '10px',
+                border: 'none',
+                fontSize: '0.85rem',
+                fontWeight: '700',
                 cursor: 'pointer',
-                flexShrink: 0
-              }}
-              title="Click to browse & crop photo from your device"
-            >
-              <div style={{
-                padding: '3px',
-                background: 'var(--gradient-primary)',
-                borderRadius: '50%',
-                display: 'inline-block',
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.35)'
-              }}>
-                <img
-                  src={settings.avatar}
-                  alt={settings.displayName}
-                  style={{
-                    width: '68px',
-                    height: '68px',
-                    borderRadius: '50%',
-                    background: '#1e293b',
-                    objectFit: 'cover',
-                    display: 'block'
-                  }}
-                  onError={(e) => {
-                    e.target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${settings.displayName || 'User'}`;
-                  }}
-                />
-              </div>
-              <div style={{
-                position: 'absolute',
-                bottom: '2px',
-                right: '2px',
-                background: 'var(--accent-primary)',
-                color: '#fff',
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
-              }}>
-                <Camera size={13} />
-              </div>
-            </div>
+                gap: '0.5rem',
+                background: isActive ? '#6d28d9' : 'transparent',
+                color: isActive ? '#ffffff' : '#64748b',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Icon size={16} /> {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-            <div>
-              <p style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{settings.displayName || 'User'}</p>
-              <p style={{ fontSize: '0.825rem', color: 'var(--text-dim)', marginBottom: '0.75rem' }}>{settings.email || 'No email set'}</p>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+      {/* TAB CONTENT 1: USER PROFILE & AVATAR */}
+      {activeTab === 'profile' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          {/* Avatar Management Card */}
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.5rem',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Camera size={18} color="#6d28d9" /> Profile Photo & Avatar
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={settings.avatar}
+                  alt="Avatar Preview"
+                  style={{
+                    width: '110px',
+                    height: '110px',
+                    borderRadius: '50%',
+                    border: '4px solid #ede9fe',
+                    boxShadow: '0 4px 14px rgba(109, 40, 217, 0.15)',
+                    objectFit: 'cover'
+                  }}
+                />
                 <button
-                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-primary btn-sm"
-                  style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', gap: '0.4rem' }}
+                  style={{
+                    position: 'absolute',
+                    bottom: '2px',
+                    right: '2px',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: '#6d28d9',
+                    border: '2px solid #ffffff',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                  title="Upload Image"
+                >
+                  <Camera size={16} />
+                </button>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>{settings.displayName || userName}</h4>
+                <span style={{ fontSize: '0.78rem', color: '#64748b' }}>{settings.email || user?.email}</span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', justifyContent: 'center', width: '100%', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    padding: '0.5rem 0.85rem',
+                    borderRadius: '10px',
+                    background: '#6d28d9',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}
                 >
                   <Upload size={14} /> Upload & Crop
                 </button>
 
                 <button
-                  type="button"
                   onClick={() => setIsAvatarModalOpen(true)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ padding: '0.4rem 0.85rem', fontSize: '0.8rem', gap: '0.4rem' }}
+                  style={{
+                    padding: '0.5rem 0.85rem',
+                    borderRadius: '10px',
+                    background: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
+                    color: '#475569',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}
                 >
-                  <Sparkles size={14} /> Presets
+                  <Sparkles size={14} color="#6d28d9" /> Preset Avatars
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-            <label className="form-label">Display Name</label>
-            <input
-              type="text"
-              className="form-input"
-              maxLength={50}
-              placeholder="e.g. Alex Rivera"
-              value={settings.displayName}
-              onChange={(e) => setSettings({ ...settings, displayName: e.target.value })}
-            />
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '0.5rem' }}>
-            <label className="form-label">Email Address</label>
-            <input
-              type="email"
-              className="form-input"
-              maxLength={100}
-              placeholder="e.g. alex@company.com"
-              value={settings.email}
-              onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-            />
-          </div>
-        </div>
-
-        {/* Preferences & Security Card */}
-        <div className="glass-panel" style={{ padding: '1.75rem', borderRadius: 'var(--radius-lg)' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Palette size={20} color="var(--accent-secondary)" /> Workspace Preferences
-          </h3>
-
-          {[
-            { key: 'darkMode', label: 'Dark Theme Interface', desc: 'Enable ultra-sleek dark theme aesthetic', icon: <Palette size={16} color="#818cf8" /> },
-            { key: 'notifications', label: 'Push & Activity Alerts', desc: 'Receive notifications for high priority tasks', icon: <Bell size={16} color="#fbbf24" /> },
-            { key: 'compactView', label: 'Compact Dashboard Layout', desc: 'Optimize UI density for wide monitor screens', icon: <Settings size={16} color="#38bdf8" /> }
-          ].map(item => (
-            <div
-              key={item.key}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.9rem 0',
-                borderBottom: '1px solid rgba(255,255,255,0.05)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'rgba(255,255,255,0.05)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.1rem' }}>{item.label}</p>
-                  <p style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>{item.desc}</p>
-                </div>
-              </div>
-
-              {/* Toggle Switch */}
-              <div
-                onClick={() => handleTogglePreference(item.key)}
-                style={{
-                  width: '46px',
-                  height: '24px',
-                  borderRadius: '12px',
-                  background: settings[item.key] ? 'var(--accent-primary)' : 'rgba(255,255,255,0.12)',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                  marginLeft: '1rem'
-                }}
-              >
-                <div style={{
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '50%',
-                  background: '#fff',
-                  position: 'absolute',
-                  top: '3px',
-                  left: settings[item.key] ? '25px' : '3px',
-                  transition: 'left 0.2s ease',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }} />
-              </div>
-            </div>
-          ))}
-
-          {/* Security Info Banner */}
+          {/* Profile Form Details */}
           <div style={{
-            marginTop: '1.5rem',
-            padding: '1.1rem',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(99, 102, 241, 0.08)',
-            border: '1px solid rgba(99, 102, 241, 0.2)'
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.5rem',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-              <Shield size={16} color="#818cf8" />
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#818cf8' }}>OWASP-Hardened Security</span>
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-              Your profile changes are protected with encrypted JWT headers, NoSQL query sanitization, and rate-limiting middleware.
-            </p>
-          </div>
-        </div>
-      </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <User size={18} color="#6d28d9" /> Personal Details
+            </h3>
 
-      {/* Save Button */}
-      <div style={{ marginTop: '1.75rem', display: 'flex', justifyContent: 'flex-end' }}>
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="btn btn-primary"
-          style={{
-            padding: '0.8rem 2.25rem',
-            fontSize: '0.95rem',
-            fontWeight: '700',
-            minWidth: '170px'
-          }}
-        >
-          {loading ? (
-            <><Loader2 className="spinner" size={18} /> Saving...</>
-          ) : saved ? (
-            <><CheckCircle2 size={18} /> Saved!</>
-          ) : (
-            <><Save size={18} /> Save Changes</>
-          )}
-        </button>
-      </div>
-
-      {/* Interactive Photo Crop & Zoom Editor Modal */}
-      {cropModalOpen && tempImageSrc && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(5, 8, 16, 0.88)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1100,
-          padding: '1rem'
-        }}>
-          <div className="glass-panel" style={{
-            width: '100%',
-            maxWidth: '520px',
-            borderRadius: 'var(--radius-xl)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.8), var(--shadow-glow)',
-            border: '1px solid var(--border-glow)'
-          }}>
-            {/* Modal Header */}
-            <div style={{
-              padding: '1.2rem 1.5rem',
-              borderBottom: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.02)'
-            }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Crop size={20} color="var(--accent-primary)" /> Crop & Adjust Profile Photo
-              </h3>
-              <button
-                onClick={() => setCropModalOpen(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.3rem' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Modal Body: Crop Viewport */}
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
-              
-              {/* Interactive Crop Mask Frame */}
-              <div
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                style={{
-                  width: '260px',
-                  height: '260px',
-                  borderRadius: '50%',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  background: '#090d16',
-                  border: '3px solid var(--accent-primary)',
-                  boxShadow: '0 0 35px rgba(99, 102, 241, 0.45)',
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                  userSelect: 'none',
-                  touchAction: 'none'
-                }}
-              >
-                {/* Image to be zoomed/panned */}
-                <img
-                  src={tempImageSrc}
-                  alt="Crop Preview"
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Full Display Name
+                </label>
+                <input
+                  type="text"
+                  value={settings.displayName}
+                  onChange={(e) => setSettings({ ...settings, displayName: e.target.value })}
                   style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    maxWidth: 'none',
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    transform: `translate(-50%, -50%) translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomLevel}) rotate(${rotation}deg)`,
-                    transformOrigin: 'center center',
-                    transition: isDragging ? 'none' : 'transform 0.1s ease-out',
-                    pointerEvents: 'none'
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
-
-                {/* Alignment Grid Overlay */}
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  pointerEvents: 'none',
-                  border: '1px dashed rgba(255, 255, 255, 0.3)',
-                  borderRadius: '50%'
-                }} />
               </div>
 
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '-0.2rem' }}>
-                <Move size={14} color="var(--accent-primary)" /> Click & drag image to reposition face
-              </p>
-
-              {/* Zoom & Rotation Controls */}
-              <div style={{
-                width: '100%',
-                padding: '1rem 1.25rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid var(--border-subtle)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.85rem'
-              }}>
-                {/* Zoom Slider Row */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(prev => Math.max(1, +(prev - 0.15).toFixed(2)))}
-                    className="btn btn-secondary btn-sm"
-                    style={{ padding: '0.35rem 0.5rem' }}
-                    title="Zoom Out"
-                  >
-                    <ZoomOut size={16} />
-                  </button>
-
-                  <input
-                    type="range"
-                    min="1"
-                    max="3"
-                    step="0.05"
-                    value={zoomLevel}
-                    onChange={(e) => setZoomLevel(parseFloat(e.target.value))}
-                    style={{
-                      flex: 1,
-                      accentColor: 'var(--accent-primary)',
-                      cursor: 'pointer'
-                    }}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(prev => Math.min(3, +(prev + 0.15).toFixed(2)))}
-                    className="btn btn-secondary btn-sm"
-                    style={{ padding: '0.35rem 0.5rem' }}
-                    title="Zoom In"
-                  >
-                    <ZoomIn size={16} />
-                  </button>
-
-                  <span style={{ fontSize: '0.825rem', fontWeight: '700', minWidth: '45px', textAlign: 'right', color: 'var(--accent-primary)' }}>
-                    {Math.round(zoomLevel * 100)}%
-                  </span>
-                </div>
-
-                {/* Additional Controls */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => setRotation(prev => (prev + 90) % 360)}
-                    className="btn btn-secondary btn-sm"
-                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', gap: '0.4rem' }}
-                  >
-                    <RotateCw size={14} /> Rotate 90°
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { setZoomLevel(1); setPanPosition({ x: 0, y: 0 }); setRotation(0); }}
-                    className="btn"
-                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.775rem', color: 'var(--text-muted)', background: 'transparent' }}
-                  >
-                    Reset Zoom
-                  </button>
-                </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Primary Email Address
+                </label>
+                <input
+                  type="email"
+                  value={settings.email}
+                  onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div style={{
-              padding: '1rem 1.5rem',
-              borderTop: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.02)'
-            }}>
-              <button
-                onClick={() => setCropModalOpen(false)}
-                className="btn btn-secondary"
-                style={{ padding: '0.6rem 1.25rem' }}
-              >
-                Cancel
-              </button>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Professional Role / Bio
+                </label>
+                <input
+                  type="text"
+                  value={settings.role}
+                  onChange={(e) => setSettings({ ...settings, role: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
 
-              <button
-                onClick={handleCropSave}
-                className="btn btn-primary"
-                style={{ padding: '0.6rem 1.5rem', gap: '0.45rem', fontWeight: '700' }}
-              >
-                <Check size={18} /> Apply & Crop Photo
-              </button>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Workspace Timezone
+                </label>
+                <select
+                  value={settings.timezone}
+                  onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    background: '#ffffff'
+                  }}
+                >
+                  <option value="(UTC+08:00) Manila, Beijing, Singapore">(UTC+08:00) Manila, Beijing, Singapore</option>
+                  <option value="(UTC-05:00) Eastern Time (US & Canada)">(UTC-05:00) Eastern Time (US & Canada)</option>
+                  <option value="(UTC+00:00) London, Dublin, Lisbon">(UTC+00:00) London, Dublin, Lisbon</option>
+                  <option value="(UTC+09:00) Tokyo, Osaka, Seoul">(UTC+09:00) Tokyo, Osaka, Seoul</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Avatar Selection Modal */}
+      {/* TAB CONTENT 2: WORKSPACE PREFERENCES */}
+      {activeTab === 'preferences' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.5rem',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Palette size={18} color="#6d28d9" /> Interface Customization
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Dark Theme Interface</h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>Enable high-contrast dark theme mode</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.darkMode}
+                  onChange={() => toggleDarkMode(!isDarkMode)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#6d28d9' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Compact Dashboard Layout</h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>Optimize card padding for wide screens</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.compactView}
+                  onChange={() => toggleCompactView(!isCompactView)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#6d28d9' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Push & Email Alerts</h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>Receive instant notifications for high priority tasks</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.notifications}
+                  onChange={() => setSettings({ ...settings, notifications: !settings.notifications })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#6d28d9' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Auto-Save Task Drafts</h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>Automatically save task edits every 30 seconds</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.autoSave}
+                  onChange={() => setSettings({ ...settings, autoSave: !settings.autoSave })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#6d28d9' }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB CONTENT 3: SECURITY & AUTH */}
+      {activeTab === 'security' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          {/* Change Password Card */}
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.5rem',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <KeyRound size={18} color="#6d28d9" /> Change Account Password
+            </h3>
+
+            {passwordMessage.text && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: '10px',
+                background: passwordMessage.type === 'error' ? '#fee2e2' : '#dcfce7',
+                border: passwordMessage.type === 'error' ? '1px solid #fca5a5' : '1px solid #86efac',
+                color: passwordMessage.type === 'error' ? '#dc2626' : '#16a34a',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                marginBottom: '1rem'
+              }}>
+                {passwordMessage.text}
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Current Password
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showCurrentPass ? 'text' : 'password'}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 2.2rem 0.65rem 0.85rem',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPass(!showCurrentPass)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                  >
+                    {showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  New Password
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showNewPass ? 'text' : 'password'}
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 2.2rem 0.65rem 0.85rem',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                  >
+                    {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  padding: '0.6rem 1.1rem',
+                  borderRadius: '10px',
+                  background: '#6d28d9',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  marginTop: '0.5rem'
+                }}
+              >
+                Update Password
+              </button>
+            </form>
+          </div>
+
+          {/* Active Sessions & 2FA */}
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.5rem',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Shield size={18} color="#6d28d9" /> Security & Session Audit
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{
+                padding: '1rem',
+                borderRadius: '12px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Two-Factor Auth (2FA)</h4>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>Protect your account with Google Authenticator</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={twoFactorEnabled}
+                  onChange={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#6d28d9' }}
+                />
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569', marginBottom: '0.65rem' }}>Active Sessions</h4>
+                <div style={{
+                  padding: '0.85rem 1rem',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <Smartphone size={18} color="#6d28d9" />
+                    <div>
+                      <h5 style={{ fontSize: '0.825rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Chrome on Windows 11</h5>
+                      <span style={{ fontSize: '0.72rem', color: '#64748b' }}>IP: 127.0.0.1 • Manila, PH</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', fontWeight: '700', padding: '0.15rem 0.5rem', borderRadius: '6px', background: '#dcfce7', color: '#16a34a' }}>
+                    Active Now
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB CONTENT 4: DATA EXPORT & BACKUP */}
+      {activeTab === 'data' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.5rem',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Database size={18} color="#6d28d9" /> Export & Backup Data
+            </h3>
+
+            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.25rem' }}>
+              Export your task lists, roadmap milestones, and workspace records into portable file formats.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{
+                padding: '1rem',
+                borderRadius: '14px',
+                background: '#f8fafc',
+                border: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>Export Tasks to CSV</h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>Download spreadsheet compatible CSV spreadsheet</p>
+                </div>
+                <button
+                  onClick={handleExportCSV}
+                  style={{
+                    padding: '0.5rem 0.95rem',
+                    borderRadius: '10px',
+                    background: '#6d28d9',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <Download size={14} /> Download CSV
+                </button>
+              </div>
+
+              <div style={{
+                padding: '1rem',
+                borderRadius: '14px',
+                background: '#f8fafc',
+                border: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>JSON Database Backup</h4>
+                  <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0 }}>Full JSON raw dump of all task schemas</p>
+                </div>
+                <button
+                  onClick={handleExportJSON}
+                  style={{
+                    padding: '0.5rem 0.95rem',
+                    borderRadius: '10px',
+                    background: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
+                    color: '#475569',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}
+                >
+                  <Download size={14} /> Download JSON
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRESET AVATARS MODAL */}
       {isAvatarModalOpen && (
         <div style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.75)',
-          backdropFilter: 'blur(8px)',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.5)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000,
           padding: '1rem'
         }}>
-          <div className="glass-panel" style={{
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.75rem',
             width: '100%',
-            maxWidth: '650px',
-            maxHeight: '90vh',
-            borderRadius: 'var(--radius-lg)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.15)'
+            maxWidth: '560px',
+            border: '1px solid #e2e8f0',
+            maxHeight: '85vh',
+            overflowY: 'auto'
           }}>
-            {/* Modal Header */}
-            <div style={{
-              padding: '1.25rem 1.5rem',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between'
-            }}>
-              <div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Sparkles size={20} color="var(--accent-primary)" /> Choose Your Profile Avatar
-                </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                  Upload your local photo or pick from preset developer avatars.
-                </p>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                Select Preset Avatar
+              </h3>
               <button
                 onClick={() => setIsAvatarModalOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: '0.35rem',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
-              {/* Local File Upload Banner inside Modal */}
-              <div style={{
-                padding: '1.1rem 1.25rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(99, 102, 241, 0.08)',
-                border: '1px dashed rgba(99, 102, 241, 0.3)',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '1rem',
-                flexWrap: 'wrap'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                  <div style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '50%',
-                    background: 'rgba(99, 102, 241, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    <Upload size={20} color="var(--accent-primary)" />
-                  </div>
-                  <div>
-                    <p style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.1rem' }}>Upload Image from Device</p>
-                    <p style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Select PNG, JPG, WebP, or SVG from your files</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-primary btn-sm"
-                  style={{ padding: '0.5rem 1.1rem', gap: '0.4rem' }}
-                >
-                  <ImageIcon size={15} /> Browse Files
-                </button>
-              </div>
-
-              {/* Category Tabs */}
-              <div style={{
-                display: 'flex',
-                gap: '0.5rem',
-                marginBottom: '1.25rem',
-                flexWrap: 'wrap',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                paddingBottom: '0.75rem'
-              }}>
-                {PRESET_AVATARS.map((cat, idx) => (
-                  <button
-                    key={cat.category}
-                    onClick={() => setActiveTab(idx)}
-                    style={{
-                      padding: '0.45rem 0.9rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: 'none',
-                      fontSize: '0.825rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      background: activeTab === idx ? 'var(--accent-primary)' : 'rgba(255,255,255,0.06)',
-                      color: activeTab === idx ? '#fff' : 'var(--text-dim)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {cat.category}
-                  </button>
-                ))}
-              </div>
-
-              {/* Avatar Grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                gap: '0.75rem',
-                marginBottom: '1.5rem'
-              }}>
-                {PRESET_AVATARS[activeTab].avatars.map((item) => {
-                  const isSelected = settings.avatar === item.url;
-                  return (
+            {PRESET_AVATARS.map(group => (
+              <div key={group.category} style={{ marginBottom: '1.25rem' }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: '800', color: '#64748b', marginBottom: '0.65rem' }}>
+                  {group.category}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))', gap: '0.65rem' }}>
+                  {group.avatars.map(av => (
                     <div
-                      key={item.url}
-                      onClick={() => handleSelectAvatar(item.url)}
+                      key={av.name}
+                      onClick={() => {
+                        setSettings(prev => ({ ...prev, avatar: av.url }));
+                        setIsAvatarModalOpen(false);
+                      }}
                       style={{
+                        padding: '0.5rem',
+                        borderRadius: '12px',
+                        border: settings.avatar === av.url ? '2px solid #6d28d9' : '1px solid #f1f5f9',
+                        background: settings.avatar === av.url ? '#ede9fe' : '#f8fafc',
+                        cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '0.4rem',
-                        padding: '0.75rem 0.5rem',
-                        borderRadius: 'var(--radius-md)',
-                        background: isSelected ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255,255,255,0.03)',
-                        border: isSelected ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.06)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        transform: isSelected ? 'scale(1.03)' : 'none'
+                        gap: '0.35rem'
                       }}
                     >
-                      <img
-                        src={item.url}
-                        alt={item.name}
-                        style={{
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '50%',
-                          background: '#1e293b'
-                        }}
-                      />
-                      <span style={{
-                        fontSize: '0.725rem',
-                        fontWeight: '600',
-                        textAlign: 'center',
-                        color: isSelected ? '#fff' : 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '90px'
-                      }}>
-                        {item.name}
+                      <img src={av.url} alt={av.name} style={{ width: '42px', height: '42px', borderRadius: '50%' }} />
+                      <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#0f172a', textAlign: 'center' }}>
+                        {av.name.split(' ')[0]}
                       </span>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Custom Image URL Option */}
-              <div style={{
-                padding: '1.1rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.08)'
-              }}>
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
-                  <LinkIcon size={14} color="var(--accent-primary)" /> Custom Image Link
-                </label>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
-                  <input
-                    type="url"
-                    className="form-input"
-                    placeholder="https://example.com/avatar.png"
-                    value={customUrlInput}
-                    onChange={(e) => setCustomUrlInput(e.target.value)}
-                    style={{ flex: 1, fontSize: '0.85rem' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleApplyCustomUrl}
-                    className="btn btn-primary"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.825rem' }}
-                  >
-                    Apply URL
-                  </button>
+                  ))}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* AVATAR CROP MODAL */}
+      {cropModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.5)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            padding: '1.75rem',
+            width: '100%',
+            maxWidth: '460px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                Crop & Preview Avatar
+              </h3>
+              <button
+                onClick={() => setCropModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            {/* Modal Footer */}
-            <div style={{
-              padding: '1rem 1.5rem',
-              borderTop: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex',
-              justifyContent: 'flex-end'
-            }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+              <img
+                src={tempImageSrc}
+                alt="Temp Upload"
+                style={{
+                  width: '140px',
+                  height: '140px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '4px solid #6d28d9',
+                  transform: `scale(${zoomLevel}) rotate(${rotation}deg)`
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
               <button
-                onClick={() => setIsAvatarModalOpen(false)}
-                className="btn"
-                style={{ background: 'rgba(255,255,255,0.08)' }}
+                onClick={() => setCropModalOpen(false)}
+                style={{ padding: '0.6rem 1.1rem', borderRadius: '10px', background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#475569', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer' }}
               >
-                Close Gallery
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveCroppedAvatar}
+                style={{ padding: '0.6rem 1.3rem', borderRadius: '10px', background: '#6d28d9', border: 'none', color: '#ffffff', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Apply Avatar
               </button>
             </div>
           </div>

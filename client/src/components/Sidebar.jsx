@@ -18,7 +18,7 @@ import {
 
 export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, activeNav, setActiveNav }) => {
   const { user, isAuthenticated } = useAuth();
-  const { stats } = useTask();
+  const { allTasks } = useTask();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
 
@@ -36,6 +36,38 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
 
   const isCollapsedEffective = collapsed && !isMobile;
 
+  // Real-time Dynamic Task Counts from MongoDB / TaskContext
+  const totalCount = allTasks.length;
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const todayCount = allTasks.filter(t => {
+    if (!t.dueDate) return false;
+    const dStr = new Date(t.dueDate).toISOString().split('T')[0];
+    return dStr === todayStr;
+  }).length;
+
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - now.getDay());
+  sunday.setHours(0, 0, 0, 0);
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  saturday.setHours(23, 59, 59, 999);
+
+  const thisWeekCount = allTasks.filter(t => {
+    if (!t.dueDate) return false;
+    const time = new Date(t.dueDate).getTime();
+    return time >= sunday.getTime() && time <= saturday.getTime();
+  }).length;
+
+  const overdueCount = allTasks.filter(t => {
+    if (t.status === 'completed') return false;
+    if (t.priority === 'urgent') return true;
+    if (t.dueDate && new Date(t.dueDate).getTime() < now.getTime()) return true;
+    return false;
+  }).length;
+
   const navItems = [
     {
       id: 'overview',
@@ -51,7 +83,8 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       id: 'mytasks',
       label: 'My Tasks',
       icon: <CheckSquare size={19} />,
-      badge: stats?.total || 6,
+      badge: totalCount,
+      badgeBg: '#6d28d9',
       action: () => {
         setActiveNav('overview');
         setCurrentTab('dashboard');
@@ -115,7 +148,8 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       id: 'alltasks',
       label: 'All Tasks',
       icon: <ListFilter size={18} />,
-      badge: stats?.total || 6,
+      badge: totalCount,
+      badgeBg: '#6d28d9',
       action: () => {
         setActiveNav('overview');
         setCurrentTab('dashboard');
@@ -126,7 +160,8 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       id: 'today',
       label: 'Today',
       icon: <Calendar size={18} />,
-      badge: 2,
+      badge: todayCount,
+      badgeBg: '#ef4444',
       action: () => {
         setActiveNav('overview');
         setCurrentTab('dashboard');
@@ -137,7 +172,8 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       id: 'thisweek',
       label: 'This Week',
       icon: <Calendar size={18} />,
-      badge: 4,
+      badge: thisWeekCount,
+      badgeBg: '#ef4444',
       action: () => {
         setActiveNav('overview');
         setCurrentTab('dashboard');
@@ -148,7 +184,8 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
       id: 'overdue',
       label: 'Overdue',
       icon: <Clock size={18} />,
-      badge: stats?.urgent || 1,
+      badge: overdueCount,
+      badgeBg: '#ef4444',
       action: () => {
         setActiveNav('overview');
         setCurrentTab('dashboard');
@@ -277,13 +314,14 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
                 </div>
                 {!isCollapsedEffective && item.badge > 0 && (
                   <span style={{
-                    background: isActive ? 'rgba(255,255,255,0.25)' : '#6d28d9',
+                    background: isActive ? 'rgba(255,255,255,0.25)' : (item.badgeBg || '#6d28d9'),
                     color: '#ffffff',
                     fontSize: '0.72rem',
                     fontWeight: '800',
-                    width: '20px',
+                    minWidth: '20px',
                     height: '20px',
-                    borderRadius: '50%',
+                    padding: '0 0.35rem',
+                    borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -329,13 +367,14 @@ export const Sidebar = ({ currentTab, setCurrentTab, collapsed, setCollapsed, ac
                 </div>
                 {!isCollapsedEffective && item.badge > 0 && (
                   <span style={{
-                    background: item.id === 'alltasks' ? '#6d28d9' : '#ef4444',
+                    background: item.badgeBg || '#6d28d9',
                     color: '#ffffff',
                     fontSize: '0.72rem',
                     fontWeight: '800',
-                    width: '20px',
+                    minWidth: '20px',
                     height: '20px',
-                    borderRadius: '50%',
+                    padding: '0 0.35rem',
+                    borderRadius: '10px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'

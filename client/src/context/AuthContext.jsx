@@ -120,6 +120,21 @@ export const AuthProvider = ({ children }) => {
     setIsCompactView(prev => (typeof val === 'boolean' ? val : !prev));
   };
 
+  const demoLogin = async () => {
+    const demoUser = {
+      id: 'demo_guest_session',
+      name: 'Demo Guest',
+      email: 'guest@taskflow.dev',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=DemoGuest',
+      role: 'Guest Reviewer'
+    };
+    setUser(demoUser);
+    setToken('demo_guest_token');
+    localStorage.setItem('tms_user', JSON.stringify(demoUser));
+    setIsAuthModalOpen(false);
+    return demoUser;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -138,6 +153,7 @@ export const AuthProvider = ({ children }) => {
         closeAuthModal,
         setAuthModalMode,
         login,
+        demoLogin,
         register,
         logout,
         confirmLogout,

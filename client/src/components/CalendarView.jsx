@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useTask } from '../context/TaskContext';
 import {
   Calendar as CalendarIcon,
@@ -8,14 +9,18 @@ import {
   CheckCircle2,
   PlusCircle,
   Tag,
-  Sparkles,
-  AlertCircle
+  Search,
+  Bell,
+  Menu,
+  ChevronDown
 } from 'lucide-react';
 
-export const CalendarView = () => {
-  const { tasks, openCreateTaskModal } = useTask();
+export const CalendarView = ({ onToggleSidebar }) => {
+  const { user } = useAuth();
+  const { tasks, openCreateTaskModal, searchQuery, setSearchQuery } = useTask();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date().getDate());
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -57,57 +62,187 @@ export const CalendarView = () => {
     switch (priority) {
       case 'urgent':
       case 'high':
-        return { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', label: 'HIGH' };
+        return { bg: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5', label: 'High' };
       case 'medium':
-        return { bg: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', label: 'MEDIUM' };
+        return { bg: '#e0f2fe', color: '#0284c7', border: '1px solid #7dd3fc', label: 'Medium' };
       case 'low':
       default:
-        return { bg: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.3)', label: 'LOW' };
+        return { bg: '#dcfce7', color: '#16a34a', border: '1px solid #86efac', label: 'Low' };
     }
   };
 
+  const userName = user?.name || 'Lester';
+  const userAvatar = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`;
+
+  const [isMobileScreen, setIsMobileScreen] = useState(window.innerWidth <= 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileScreen(window.innerWidth <= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div style={{
-      padding: '1.75rem 2rem',
-      color: '#f8fafc',
+    <div className="dashboard-light-theme" style={{
+      color: '#1e293b',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      background: '#f4f6f8',
+      padding: isMobileScreen ? '1rem 0.85rem' : '1.5rem 1.8rem',
       minHeight: '100vh',
+      width: '100%',
       boxSizing: 'border-box'
     }}>
-      {/* Header Section */}
-      <div style={{
+      {/* Top Header Bar - Fixed Sticky Position (Matching Dashboard) */}
+      <header style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '1.75rem',
-        flexWrap: 'wrap',
+        padding: '0.85rem 1.5rem',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid #e2e8f0',
+        borderRadius: '14px',
+        marginBottom: '1.25rem',
         gap: '1rem',
-        background: 'rgba(21, 10, 48, 0.65)',
-        backdropFilter: 'blur(16px)',
-        padding: '1.25rem 1.5rem',
-        borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+        boxShadow: '0 4px 14px rgba(0,0,0,0.05)'
       }}>
-        <div>
-          <h1 style={{ fontSize: '1.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#ffffff', margin: 0 }}>
-            <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6d28d9, #8b5cf6)',
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+          <button
+            onClick={onToggleSidebar}
+            className="header-hamburger-toggle"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#64748b',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 12px rgba(139, 92, 246, 0.4)'
-            }}>
-              <CalendarIcon color="#ffffff" size={20} />
+              alignItems: 'center'
+            }}
+          >
+            <Menu size={20} />
+          </button>
+
+          {/* Search Box */}
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '380px'
+          }}>
+            <Search size={16} style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#94a3b8'
+            }} />
+            <input
+              type="text"
+              placeholder="Search tasks, projects..."
+              value={searchQuery || ''}
+              onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.5rem 1rem 0.5rem 2.2rem',
+                borderRadius: '20px',
+                border: '1px solid #e2e8f0',
+                background: '#f8fafc',
+                fontSize: '0.85rem',
+                color: '#1e293b',
+                outline: 'none',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Right Action Icons & User Info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+          <div style={{ position: 'relative', cursor: 'pointer' }}>
+            <Bell size={18} color="#64748b" />
+            <span style={{
+              position: 'absolute',
+              top: '-2px',
+              right: '-2px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#8b5cf6'
+            }} />
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <div
+              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                cursor: 'pointer'
+              }}
+            >
+              <img
+                src={userAvatar}
+                alt={userName}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: '#1e1b4b'
+                }}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a', lineHeight: 1.1 }}>
+                  {userName}
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: '600' }}>
+                  ● Online
+                </span>
+              </div>
+              <ChevronDown size={14} color="#64748b" />
             </div>
-            Interactive Calendar Schedule
-          </h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.35rem', margin: 0 }}>
-            Track task due dates, upcoming milestones, and delivery deadlines across the month.
-          </p>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Title Card (Matching Dashboard Light Banner) */}
+      <div style={{
+        background: '#ffffff',
+        borderRadius: '16px',
+        padding: '1.25rem 1.5rem',
+        border: '1px solid #f1f5f9',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+        marginBottom: '1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            background: '#ede9fe',
+            color: '#6d28d9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(109, 40, 217, 0.15)'
+          }}>
+            <CalendarIcon size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#0f172a', margin: 0, lineHeight: 1.1 }}>
+              Interactive Calendar Schedule
+            </h1>
+            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
+              Track task due dates, upcoming milestones, and delivery deadlines across the month.
+            </p>
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -116,9 +251,9 @@ export const CalendarView = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: '10px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              color: '#ffffff',
+              background: '#f1f5f9',
+              border: '1px solid #e2e8f0',
+              color: '#475569',
               fontSize: '0.85rem',
               fontWeight: '700',
               cursor: 'pointer',
@@ -133,7 +268,7 @@ export const CalendarView = () => {
             style={{
               padding: '0.5rem 1.15rem',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6d28d9, #8b5cf6)',
+              background: '#6d28d9',
               border: 'none',
               color: '#ffffff',
               fontSize: '0.85rem',
@@ -142,7 +277,7 @@ export const CalendarView = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '0.45rem',
-              boxShadow: '0 4px 14px rgba(109, 40, 217, 0.4)',
+              boxShadow: '0 4px 12px rgba(109, 40, 217, 0.25)',
               transition: 'all 0.2s ease'
             }}
           >
@@ -152,16 +287,15 @@ export const CalendarView = () => {
       </div>
 
       {/* Main Grid: 2 Columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobileScreen ? '1fr' : 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: '1.5rem' }}>
         
         {/* LEFT COLUMN: Main Calendar Viewport */}
         <div style={{
-          background: 'rgba(21, 10, 48, 0.65)',
-          backdropFilter: 'blur(16px)',
-          padding: '1.5rem',
+          background: '#ffffff',
           borderRadius: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+          padding: '1.5rem',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
         }}>
           {/* Calendar Header Controls */}
           <div style={{
@@ -169,10 +303,10 @@ export const CalendarView = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: '1.25rem',
-            paddingBottom: '1rem',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+            paddingBottom: '0.85rem',
+            borderBottom: '1px solid #f1f5f9'
           }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>
               {monthNames[month]} {year}
             </h3>
 
@@ -183,9 +317,9 @@ export const CalendarView = () => {
                   width: '32px',
                   height: '32px',
                   borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
+                  background: '#f1f5f9',
+                  border: '1px solid #e2e8f0',
+                  color: '#475569',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -200,9 +334,9 @@ export const CalendarView = () => {
                   width: '32px',
                   height: '32px',
                   borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#ffffff',
+                  background: '#f1f5f9',
+                  border: '1px solid #e2e8f0',
+                  color: '#475569',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -222,7 +356,7 @@ export const CalendarView = () => {
             fontWeight: '700',
             fontSize: '0.78rem',
             letterSpacing: '0.05em',
-            color: '#a78bfa',
+            color: '#64748b',
             marginBottom: '0.85rem'
           }}>
             <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
@@ -254,21 +388,21 @@ export const CalendarView = () => {
                     height: '62px',
                     borderRadius: '12px',
                     background: isSelected
-                      ? 'linear-gradient(135deg, rgba(109, 40, 217, 0.35), rgba(124, 58, 237, 0.25))'
+                      ? '#ede9fe'
                       : isToday
-                      ? 'rgba(139, 92, 246, 0.12)'
-                      : 'rgba(255, 255, 255, 0.03)',
+                      ? '#f0fdf4'
+                      : '#ffffff',
                     border: isSelected
-                      ? '2px solid #8b5cf6'
+                      ? '2px solid #6d28d9'
                       : isToday
-                      ? '1px solid rgba(139, 92, 246, 0.5)'
-                      : '1px solid rgba(255, 255, 255, 0.05)',
+                      ? '1px solid #22c55e'
+                      : '1px solid #f1f5f9',
                     padding: '0.4rem 0.5rem',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    boxShadow: isSelected ? '0 0 15px rgba(139, 92, 246, 0.3)' : 'none',
+                    boxShadow: isSelected ? '0 2px 8px rgba(109, 40, 217, 0.15)' : 'none',
                     transition: 'all 0.2s ease'
                   }}
                 >
@@ -276,7 +410,7 @@ export const CalendarView = () => {
                     <span style={{
                       fontSize: '0.85rem',
                       fontWeight: isSelected || isToday ? '800' : '600',
-                      color: isSelected ? '#ffffff' : isToday ? '#a78bfa' : '#cbd5e1'
+                      color: isSelected ? '#6d28d9' : isToday ? '#16a34a' : '#1e293b'
                     }}>
                       {day}
                     </span>
@@ -287,8 +421,7 @@ export const CalendarView = () => {
                         padding: '0.1rem 0.4rem',
                         borderRadius: '10px',
                         background: '#6d28d9',
-                        color: '#ffffff',
-                        boxShadow: '0 2px 6px rgba(109, 40, 217, 0.4)'
+                        color: '#ffffff'
                       }}>
                         {dayTasks.length}
                       </span>
@@ -304,7 +437,7 @@ export const CalendarView = () => {
                           height: '4px',
                           flex: 1,
                           borderRadius: '2px',
-                          background: t.priority === 'urgent' || t.priority === 'high' ? '#ef4444' : t.priority === 'medium' ? '#3b82f6' : '#22c55e'
+                          background: t.priority === 'urgent' || t.priority === 'high' ? '#ef4444' : t.priority === 'medium' ? '#0284c7' : '#16a34a'
                         }}
                       />
                     ))}
@@ -317,12 +450,11 @@ export const CalendarView = () => {
 
         {/* RIGHT COLUMN: Selected Day Tasks Detail Panel */}
         <div style={{
-          background: 'rgba(21, 10, 48, 0.65)',
-          backdropFilter: 'blur(16px)',
-          padding: '1.5rem',
+          background: '#ffffff',
           borderRadius: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+          padding: '1.5rem',
+          border: '1px solid #f1f5f9',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
           display: 'flex',
           flexDirection: 'column'
         }}>
@@ -331,12 +463,12 @@ export const CalendarView = () => {
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: '1.25rem',
-            paddingBottom: '1rem',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+            paddingBottom: '0.85rem',
+            borderBottom: '1px solid #f1f5f9'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Clock size={18} color="#a78bfa" />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
+              <Clock size={18} color="#6d28d9" />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>
                 Tasks Due on {monthNames[month]} {selectedDate}, {year}
               </h3>
             </div>
@@ -345,9 +477,8 @@ export const CalendarView = () => {
               fontWeight: '700',
               padding: '0.2rem 0.6rem',
               borderRadius: '12px',
-              background: 'rgba(139, 92, 246, 0.2)',
-              color: '#c4b5fd',
-              border: '1px solid rgba(139, 92, 246, 0.3)'
+              background: '#ede9fe',
+              color: '#6d28d9'
             }}>
               {selectedDayTasks.length} task{selectedDayTasks.length === 1 ? '' : 's'}
             </span>
@@ -364,15 +495,15 @@ export const CalendarView = () => {
               textAlign: 'center',
               padding: '2rem 1rem',
               color: '#94a3b8',
-              background: 'rgba(255, 255, 255, 0.02)',
+              background: '#f8fafc',
               borderRadius: '14px',
-              border: '1px dashed rgba(255, 255, 255, 0.08)'
+              border: '1px dashed #e2e8f0'
             }}>
-              <CheckCircle2 size={42} color="#4ade80" style={{ opacity: 0.8, marginBottom: '0.75rem' }} />
-              <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: '#ffffff', margin: 0 }}>
+              <CheckCircle2 size={42} color="#16a34a" style={{ opacity: 0.8, marginBottom: '0.75rem' }} />
+              <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: '#0f172a', margin: 0 }}>
                 No Tasks Scheduled
               </h4>
-              <p style={{ fontSize: '0.825rem', color: '#94a3b8', marginTop: '0.35rem', margin: 0 }}>
+              <p style={{ fontSize: '0.825rem', color: '#64748b', marginTop: '0.35rem', margin: 0 }}>
                 You're all clear for {monthNames[month]} {selectedDate}.
               </p>
             </div>
@@ -385,11 +516,11 @@ export const CalendarView = () => {
                     key={task.id || task._id}
                     style={{
                       padding: '1rem 1.15rem',
-                      background: 'rgba(255, 255, 255, 0.04)',
+                      background: '#f8fafc',
                       borderRadius: '14px',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      border: '1px solid #f1f5f9',
                       borderLeft: `4px solid ${prio.color}`,
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -398,24 +529,22 @@ export const CalendarView = () => {
                         borderRadius: '8px',
                         fontSize: '0.68rem',
                         fontWeight: '800',
-                        letterSpacing: '0.04em',
                         background: prio.bg,
-                        color: prio.color,
-                        border: prio.border
+                        color: prio.color
                       }}>
                         {prio.label}
                       </span>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Tag size={12} color="#a78bfa" /> {task.category || 'Work'}
+                      <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Tag size={12} color="#6d28d9" /> {task.category || 'Work'}
                       </span>
                     </div>
 
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#ffffff', margin: 0, lineHeight: '1.3' }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#0f172a', margin: 0, lineHeight: '1.3' }}>
                       {task.title}
                     </h4>
 
                     {task.description && (
-                      <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.4rem', margin: 0, lineHeight: '1.4' }}>
+                      <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.4rem', margin: 0, lineHeight: '1.4' }}>
                         {task.description}
                       </p>
                     )}

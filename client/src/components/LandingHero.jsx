@@ -3,124 +3,197 @@ import { useAuth } from '../context/AuthContext';
 import { Sparkles, ArrowRight, ShieldCheck, Zap, Layers, CheckCircle2 } from 'lucide-react';
 
 export const LandingHero = ({ onExplore }) => {
-  const { isAuthenticated, openAuthModal } = useAuth();
+  const { isAuthenticated, openAuthModal, demoLogin } = useAuth();
+
+  const handleDemoClick = async () => {
+    if (isAuthenticated) {
+      onExplore();
+    } else {
+      await demoLogin();
+      onExplore();
+    }
+  };
 
   return (
-    <section style={{ padding: '4rem 0 3rem 0', textAlign: 'center' }}>
+    <section style={{
+      padding: '3rem 1.25rem 3rem 1.25rem',
+      textAlign: 'center',
+      background: '#f4f6f8',
+      color: '#1e293b',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    }}>
+      {/* Badge Pill */}
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.4rem 1rem',
+        borderRadius: '20px',
+        background: '#ede9fe',
+        border: '1px solid #ddd6fe',
+        color: '#6d28d9',
+        fontSize: '0.85rem',
+        fontWeight: '700',
+        marginBottom: '1.5rem'
+      }}>
+        <Sparkles size={16} /> Next-Gen Workspace & Security Platform
+      </div>
+
       {/* Main Title */}
       <h1 style={{
-        fontSize: 'clamp(2.5rem, 5vw, 4.2rem)',
+        fontSize: 'clamp(2.2rem, 5vw, 3.8rem)',
         fontWeight: '800',
         lineHeight: 1.15,
-        marginBottom: '1.5rem',
-        maxWidth: '900px',
-        margin: '0 auto 1.5rem auto'
+        marginBottom: '1.25rem',
+        maxWidth: '850px',
+        margin: '0 auto 1.25rem auto',
+        color: '#0f172a'
       }}>
         Organize work, boost focus, and <br />
-        <span className="gradient-text">finish tasks effortlessly.</span>
+        <span style={{
+          background: 'linear-gradient(135deg, #6d28d9 0%, #9333ea 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          finish tasks effortlessly.
+        </span>
       </h1>
 
       {/* Subtitle */}
       <p style={{
-        fontSize: '1.15rem',
-        color: 'var(--text-muted)',
-        maxWidth: '650px',
-        margin: '0 auto 2.5rem auto',
+        fontSize: '1.1rem',
+        color: '#64748b',
+        maxWidth: '640px',
+        margin: '0 auto 2.25rem auto',
         lineHeight: 1.6
       }}>
         TaskFlow Pro combines intuitive Kanban boards, priority tagging, subtask checklists, and real-time MongoDB analytics into a sleek, lightning-fast workspace.
       </p>
 
       {/* CTA Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '4rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '3.5rem' }}>
         <button
           onClick={isAuthenticated ? onExplore : () => openAuthModal('register')}
-          className="btn btn-primary"
-          style={{ padding: '0.85rem 2rem', fontSize: '1.05rem', borderRadius: 'var(--radius-lg)' }}
+          style={{
+            padding: '0.8rem 1.8rem',
+            fontSize: '1rem',
+            fontWeight: '700',
+            borderRadius: '12px',
+            background: '#6d28d9',
+            border: 'none',
+            color: '#ffffff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 16px rgba(109, 40, 217, 0.3)'
+          }}
         >
           {isAuthenticated ? 'Open Dashboard' : 'Get Started Free'} <ArrowRight size={18} />
         </button>
 
         <button
-          onClick={onExplore}
-          className="btn btn-secondary"
-          style={{ padding: '0.85rem 2rem', fontSize: '1.05rem', borderRadius: 'var(--radius-lg)' }}
+          onClick={handleDemoClick}
+          style={{
+            padding: '0.8rem 1.8rem',
+            fontSize: '1rem',
+            fontWeight: '700',
+            borderRadius: '12px',
+            background: '#ffffff',
+            border: '1px solid #cbd5e1',
+            color: '#334155',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+          }}
         >
           View Live Demo
         </button>
       </div>
 
       {/* Interactive Mock Preview Card */}
-      <div className="glass-panel" style={{
-        maxWidth: '950px',
+      <div style={{
+        maxWidth: '920px',
         margin: '0 auto',
-        padding: '1.75rem',
+        padding: '1.5rem',
         textAlign: 'left',
-        position: 'relative',
-        overflow: 'hidden'
+        background: '#ffffff',
+        borderRadius: '20px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.06)'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: '1.25rem',
-          borderBottom: '1px solid var(--border-subtle)',
-          paddingBottom: '1rem'
+          borderBottom: '1px solid #f1f5f9',
+          paddingBottom: '0.85rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444' }} />
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f59e0b' }} />
             <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#10b981' }} />
-            <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <span style={{ marginLeft: '0.5rem', fontSize: '0.825rem', color: '#64748b', fontWeight: '600' }}>
               TaskFlow Pro Workspace — Sprint Overview
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <span className="badge badge-medium"><Zap size={12} /> Live Preview</span>
+          <div>
+            <span style={{
+              fontSize: '0.75rem',
+              fontWeight: '800',
+              background: '#ede9fe',
+              color: '#6d28d9',
+              padding: '0.2rem 0.6rem',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.3rem'
+            }}>
+              <Zap size={12} /> Live Preview
+            </span>
           </div>
         </div>
 
         {/* Floating preview columns */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '1rem'
         }}>
           {/* Column 1 */}
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#93c5fd' }}>📌 TO DO (2)</span>
+              <span style={{ fontSize: '0.825rem', fontWeight: '800', color: '#0284c7' }}>📌 TO DO (2)</span>
             </div>
-            <div style={{ background: 'var(--bg-elevated)', padding: '0.85rem', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem', borderLeft: '3px solid #3b82f6' }}>
-              <span className="badge badge-high" style={{ marginBottom: '0.4rem' }}>High</span>
-              <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>Deploy Node.js microservice</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>DueDate: Tomorrow</div>
+            <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: '10px', borderLeft: '4px solid #0284c7', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#dc2626', background: '#fee2e2', padding: '0.1rem 0.4rem', borderRadius: '6px', display: 'inline-block', marginBottom: '0.35rem' }}>High Priority</span>
+              <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0f172a' }}>Deploy Node.js microservice</div>
+              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem' }}>DueDate: Tomorrow</div>
             </div>
           </div>
 
           {/* Column 2 */}
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#fde047' }}>⚙️ IN PROGRESS (1)</span>
+              <span style={{ fontSize: '0.825rem', fontWeight: '800', color: '#d97706' }}>⚡ IN PROGRESS (1)</span>
             </div>
-            <div style={{ background: 'var(--bg-elevated)', padding: '0.85rem', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid #f59e0b' }}>
-              <span className="badge badge-urgent" style={{ marginBottom: '0.4rem' }}>Urgent</span>
-              <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>Build MongoDB Indexing Strategy</div>
-              <div style={{ fontSize: '0.75rem', color: '#34d399', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                <CheckCircle2 size={12} /> 2 of 3 Subtasks Complete
-              </div>
+            <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: '10px', borderLeft: '4px solid #d97706', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#6d28d9', background: '#ede9fe', padding: '0.1rem 0.4rem', borderRadius: '6px', display: 'inline-block', marginBottom: '0.35rem' }}>Active</span>
+              <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0f172a' }}>Security Access Audit</div>
+              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.3rem' }}>Progress: 80%</div>
             </div>
           </div>
 
           {/* Column 3 */}
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '14px', border: '1px solid #f1f5f9' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#6ee7b7' }}>✅ COMPLETED (3)</span>
+              <span style={{ fontSize: '0.825rem', fontWeight: '800', color: '#16a34a' }}>✅ COMPLETED (10)</span>
             </div>
-            <div style={{ background: 'var(--bg-elevated)', padding: '0.85rem', borderRadius: 'var(--radius-sm)', opacity: 0.85, borderLeft: '3px solid #10b981' }}>
-              <span className="badge badge-low" style={{ marginBottom: '0.4rem' }}>Done</span>
-              <div style={{ fontWeight: '600', fontSize: '0.9rem', textDecoration: 'line-through' }}>Design Auth JWT Architecture</div>
+            <div style={{ background: '#ffffff', padding: '0.85rem', borderRadius: '10px', borderLeft: '4px solid #16a34a', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#16a34a', background: '#dcfce7', padding: '0.1rem 0.4rem', borderRadius: '6px', display: 'inline-block', marginBottom: '0.35rem' }}>Done</span>
+              <div style={{ fontWeight: '700', fontSize: '0.875rem', color: '#0f172a' }}>MongoDB Connection Engine</div>
+              <div style={{ fontSize: '0.72rem', color: '#16a34a', marginTop: '0.3rem' }}>Completed Today</div>
             </div>
           </div>
         </div>

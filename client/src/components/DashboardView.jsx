@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTask } from '../context/TaskContext';
 import {
@@ -39,7 +39,20 @@ export const DashboardView = ({ onToggleSidebar }) => {
   const [highPriorityOnly, setHighPriorityOnly] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState([
+    { id: 1, title: 'High Priority Alert', text: 'Authorization & Privilege Manipulation task assigned', time: '10m ago', unread: true },
+    { id: 2, title: 'Upcoming Deadline', text: 'Mass Assignment Assessment due today', time: '1h ago', unread: true },
+    { id: 3, title: 'Weekly Productivity Rate', text: 'You achieved 91% completion rate this week!', time: '3h ago', unread: true }
+  ]);
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [isMobileScreen, setIsMobileScreen] = useState(window.innerWidth <= 1024);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileScreen(window.innerWidth <= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Filter tasks for the "My Tasks" section
   const displayTasks = allTasks.filter(task => {
@@ -164,6 +177,7 @@ export const DashboardView = ({ onToggleSidebar }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
           <button
             onClick={onToggleSidebar}
+            className="header-hamburger-toggle"
             style={{
               background: 'none',
               border: 'none',
@@ -204,29 +218,122 @@ export const DashboardView = ({ onToggleSidebar }) => {
 
         {/* Header Right Tools & User Pill */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-          <button style={{
-            position: 'relative',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#64748b'
-          }}>
-            <Bell size={20} />
-            <span style={{
-              position: 'absolute',
-              top: '-2px',
-              right: '-2px',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: '#8b5cf6'
-            }} />
-          </button>
+          {/* Notification Bell Dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => {
+                setNotificationsOpen(!notificationsOpen);
+                setUserDropdownOpen(false);
+              }}
+              style={{
+                position: 'relative',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0.4rem'
+              }}
+            >
+              <Bell size={20} />
+              {unreadNotifications.some(n => n.unread) && (
+                <span style={{
+                  position: 'absolute',
+                  top: '2px',
+                  right: '2px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#6d28d9'
+                }} />
+              )}
+            </button>
+
+            {/* Notification Popover Menu */}
+            {notificationsOpen && (
+              <div style={{
+                position: 'absolute',
+                right: '-40px',
+                top: '125%',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '16px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                width: '320px',
+                zIndex: 100,
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  padding: '0.85rem 1rem',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                      Notifications
+                    </h4>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: '800',
+                      background: '#ede9fe',
+                      color: '#6d28d9',
+                      padding: '0.15rem 0.5rem',
+                      borderRadius: '10px'
+                    }}>
+                      {unreadNotifications.filter(n => n.unread).length}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setUnreadNotifications(prev => prev.map(n => ({ ...n, unread: false })))}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      color: '#6d28d9',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Mark all read
+                  </button>
+                </div>
+
+                <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                  {unreadNotifications.map(n => (
+                    <div
+                      key={n.id}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        borderBottom: '1px solid #f8fafc',
+                        background: n.unread ? '#f8fafc' : '#ffffff',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.2rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#0f172a' }}>{n.title}</span>
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{n.time}</span>
+                      </div>
+                      <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, lineHeight: 1.3 }}>{n.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* User Profile Pill */}
           <div style={{ position: 'relative' }}>
             <div
-              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              onClick={() => {
+                setUserDropdownOpen(!userDropdownOpen);
+                setNotificationsOpen(false);
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -236,20 +343,18 @@ export const DashboardView = ({ onToggleSidebar }) => {
                 borderRadius: '20px'
               }}
             >
-              <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '50%',
-                background: '#312e81',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '700',
-                fontSize: '0.9rem'
-              }}>
-                {userName.charAt(0).toUpperCase()}
-              </div>
+              <img
+                src={userAvatar}
+                alt={userName}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  border: '2px solid #6d28d9',
+                  background: '#ede9fe'
+                }}
+              />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.875rem', fontWeight: '700', color: '#0f172a', lineHeight: '1.2' }}>
                   {userName}
@@ -262,31 +367,47 @@ export const DashboardView = ({ onToggleSidebar }) => {
               <ChevronDown size={14} color="#64748b" />
             </div>
 
+            {/* User Dropdown Menu */}
             {userDropdownOpen && (
               <div style={{
                 position: 'absolute',
                 right: 0,
-                top: '110%',
+                top: '120%',
                 background: '#ffffff',
                 border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                width: '160px',
-                zIndex: 50,
+                borderRadius: '16px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.12)',
+                width: '220px',
+                zIndex: 100,
                 overflow: 'hidden'
               }}>
+                <div style={{ padding: '1rem', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <img src={userAvatar} alt={userName} style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#ede9fe' }} />
+                  <div style={{ overflow: 'hidden' }}>
+                    <h4 style={{ fontSize: '0.875rem', fontWeight: '800', color: '#0f172a', margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {userName}
+                    </h4>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {user?.email || 'marklestercagay2803@gmail.com'}
+                    </span>
+                  </div>
+                </div>
+
                 <button
                   onClick={() => { setUserDropdownOpen(false); logout(); }}
                   style={{
                     width: '100%',
-                    padding: '0.65rem 1rem',
+                    padding: '0.75rem 1rem',
                     background: 'none',
                     border: 'none',
                     textAlign: 'left',
-                    color: '#ef4444',
-                    fontWeight: '600',
+                    color: '#dc2626',
+                    fontWeight: '700',
                     fontSize: '0.85rem',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
                   }}
                 >
                   Sign Out
@@ -367,12 +488,7 @@ export const DashboardView = ({ onToggleSidebar }) => {
       </div>
 
       {/* 4 Stat Cards Row */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '1.2rem',
-        marginBottom: '1.75rem'
-      }}>
+      <div className="dashboard-stat-cards-row">
         {/* Total Tasks */}
         <div style={{
           background: '#ffffff',
@@ -518,12 +634,8 @@ export const DashboardView = ({ onToggleSidebar }) => {
         </div>
       </div>
 
-      {/* Main Grid Section: 2 Columns */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) 300px',
-        gap: '1.5rem'
-      }}>
+      {/* Main Grid Section */}
+      <div className="dashboard-main-grid">
 
         {/* LEFT COLUMN: My Tasks & Task Board */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -630,16 +742,9 @@ export const DashboardView = ({ onToggleSidebar }) => {
                 return (
                   <div
                     key={taskId}
+                    className="dashboard-task-item-row"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.85rem 1rem',
-                      borderRadius: '14px',
-                      background: isCompleted ? '#f8fafc' : '#ffffff',
-                      border: '1px solid #f1f5f9',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.02)',
-                      position: 'relative'
+                      background: isCompleted ? '#f8fafc' : '#ffffff'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1 }}>
@@ -681,7 +786,7 @@ export const DashboardView = ({ onToggleSidebar }) => {
                     </div>
 
                     {/* Tags & Action Buttons */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                    <div className="dashboard-task-item-tags">
                       {/* Status Tag */}
                       <span style={{
                         padding: '0.25rem 0.65rem',
@@ -800,11 +905,7 @@ export const DashboardView = ({ onToggleSidebar }) => {
               </h3>
             </div>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1rem'
-            }}>
+            <div className="dashboard-task-board-grid">
               {/* To Do Column */}
               <div style={{
                 background: '#ede9fe',

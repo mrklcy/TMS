@@ -1,16 +1,16 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CheckSquare, LogOut, Sparkles, Sun, Moon } from 'lucide-react';
+import { CheckSquare, LogOut, Sparkles, Sun, Moon, LogIn } from 'lucide-react';
 
 export const Navbar = ({ currentTab, setCurrentTab }) => {
   const { user, isAuthenticated, logout, openAuthModal, isDarkMode, toggleDarkMode } = useAuth();
 
   return (
     <nav style={{
-      background: 'rgba(9, 13, 22, 0.88)',
+      background: 'rgba(9, 13, 22, 0.92)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      borderBottom: '1px solid var(--border-subtle)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
@@ -19,7 +19,7 @@ export const Navbar = ({ currentTab, setCurrentTab }) => {
       <div style={{
         maxWidth: '1320px',
         margin: '0 auto',
-        padding: '0.75rem 1.25rem',
+        padding: '0.65rem 1rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -29,34 +29,43 @@ export const Navbar = ({ currentTab, setCurrentTab }) => {
         {/* Brand Logo */}
         <div 
           onClick={() => setCurrentTab(isAuthenticated ? 'dashboard' : 'landing')}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', flexShrink: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', cursor: 'pointer', flexShrink: 0 }}
         >
           <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '12px',
-            background: 'var(--gradient-primary)',
+            width: '34px',
+            height: '34px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, #6d28d9, #9333ea)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: 'var(--shadow-glow)',
+            boxShadow: '0 2px 10px rgba(109, 40, 217, 0.3)',
             flexShrink: 0
           }}>
-            <CheckSquare size={22} color="#ffffff" />
+            <CheckSquare size={18} color="#ffffff" />
           </div>
           <div>
-            <span style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.03em', whiteSpace: 'nowrap' }}>
-              TaskFlow<span className="gradient-text">Pro</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+              TaskFlow<span style={{ color: '#a78bfa' }}>Pro</span>
             </span>
           </div>
         </div>
 
         {/* Navigation items */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           <button
             onClick={() => toggleDarkMode()}
-            className="btn btn-secondary btn-sm"
-            style={{ padding: '0.4rem 0.65rem' }}
+            style={{
+              padding: '0.4rem 0.6rem',
+              borderRadius: '10px',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#cbd5e1',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
             title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
             {isDarkMode ? <Sun size={16} color="#fbbf24" /> : <Moon size={16} color="#6366f1" />}
@@ -64,73 +73,46 @@ export const Navbar = ({ currentTab, setCurrentTab }) => {
 
           {!isAuthenticated && (
             <button
-              onClick={() => setCurrentTab('landing')}
-              className={`btn ${currentTab === 'landing' ? 'btn-secondary' : ''}`}
+              onClick={() => openAuthModal('login')}
               style={{
-                background: currentTab === 'landing' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                color: currentTab === 'landing' ? '#fff' : 'var(--text-muted)',
-                padding: '0.45rem 0.85rem'
+                padding: '0.45rem 0.9rem',
+                borderRadius: '10px',
+                background: '#6d28d9',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '0.825rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                boxShadow: '0 2px 10px rgba(109, 40, 217, 0.3)',
+                whiteSpace: 'nowrap'
               }}
             >
-              <Sparkles size={15} /> Home
+              <LogIn size={14} /> Log In
             </button>
           )}
 
-          {/* User Auth state buttons */}
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.3rem 0.7rem',
-                borderRadius: '24px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid var(--border-subtle)'
-              }}>
-                <div style={{
-                  padding: '2px',
-                  background: 'var(--gradient-primary)',
-                  borderRadius: '50%',
+              <button
+                onClick={() => logout()}
+                style={{
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '10px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  color: '#f87171',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <img
-                    src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'User'}`}
-                    alt={user?.name}
-                    style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#1e293b' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#ffffff', whiteSpace: 'nowrap' }}>
-                    {user?.name}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                onClick={logout}
-                className="btn btn-danger btn-sm"
-                style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                title="Logout"
+                  gap: '0.35rem'
+                }}
               >
-                <LogOut size={14} /> Logout
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button
-                onClick={() => openAuthModal('login')}
-                className="btn btn-secondary btn-sm"
-              >
-                Log In
-              </button>
-              <button
-                onClick={() => openAuthModal('register')}
-                className="btn btn-primary btn-sm"
-              >
-                Get Started
+                <LogOut size={14} /> Sign Out
               </button>
             </div>
           )}

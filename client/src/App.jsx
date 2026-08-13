@@ -59,21 +59,21 @@ const AppContent = () => {
   const renderWorkspaceView = () => {
     switch (activeNav) {
       case 'calendar':
-        return <CalendarView />;
+        return <CalendarView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'projects':
-        return <ProjectsView />;
+        return <ProjectsView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'team':
-        return <TeamView />;
+        return <TeamView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'focustimer':
-        return <FocusTimerView />;
+        return <FocusTimerView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'analytics':
-        return <AnalyticsView />;
+        return <AnalyticsView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'recent':
-        return <RecentActivityView />;
+        return <RecentActivityView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'notifications':
-        return <NotificationsView />;
+        return <NotificationsView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'settings':
-        return <SettingsView />;
+        return <SettingsView onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />;
       case 'kanban':
       case 'list':
       case 'overview':

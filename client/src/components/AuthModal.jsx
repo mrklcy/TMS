@@ -47,10 +47,38 @@ export const AuthModal = () => {
   };
 
   return (
-    <div className="modal-overlay" onClick={closeAuthModal}>
-      <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(15, 23, 42, 0.6)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem'
+    }} onClick={closeAuthModal}>
+      <div style={{
+        background: '#ffffff',
+        borderRadius: '24px',
+        padding: '1.75rem',
+        width: '100%',
+        maxWidth: '440px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+        boxSizing: 'border-box'
+      }} onClick={e => e.stopPropagation()}>
+        
         {/* Header Tabs */}
-        <div className="modal-header">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '1.5rem',
+          borderBottom: '1px solid #f1f5f9',
+          paddingBottom: '0.75rem'
+        }}>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button
               type="button"
@@ -59,11 +87,12 @@ export const AuthModal = () => {
                 background: 'none',
                 border: 'none',
                 fontSize: '1.1rem',
-                fontWeight: '700',
-                color: authModalMode === 'login' ? '#ffffff' : 'var(--text-muted)',
-                borderBottom: authModalMode === 'login' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                fontWeight: '800',
+                color: authModalMode === 'login' ? '#6d28d9' : '#94a3b8',
+                borderBottom: authModalMode === 'login' ? '3px solid #6d28d9' : '3px solid transparent',
                 paddingBottom: '0.4rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
               Log In
@@ -75,11 +104,12 @@ export const AuthModal = () => {
                 background: 'none',
                 border: 'none',
                 fontSize: '1.1rem',
-                fontWeight: '700',
-                color: authModalMode === 'register' ? '#ffffff' : 'var(--text-muted)',
-                borderBottom: authModalMode === 'register' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                fontWeight: '800',
+                color: authModalMode === 'register' ? '#6d28d9' : '#94a3b8',
+                borderBottom: authModalMode === 'register' ? '3px solid #6d28d9' : '3px solid transparent',
                 paddingBottom: '0.4rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
               Create Account
@@ -88,91 +118,146 @@ export const AuthModal = () => {
 
           <button
             onClick={closeAuthModal}
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.25rem'
+            }}
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="modal-body">
+        {/* Body Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
           {error && (
             <div style={{
               padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius-md)',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
-              fontSize: '0.875rem',
+              borderRadius: '12px',
+              background: '#fee2e2',
+              border: '1px solid #fca5a5',
+              color: '#dc2626',
+              fontSize: '0.825rem',
+              fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1.25rem'
+              gap: '0.5rem'
             }}>
               <AlertCircle size={16} /> {error}
             </div>
           )}
 
           {authModalMode === 'register' && (
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+                Full Name
+              </label>
               <div style={{ position: 'relative' }}>
-                <User size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--text-dim)' }} />
+                <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                 <input
                   type="text"
-                  className="form-input"
-                  placeholder="John Doe"
-                  style={{ paddingLeft: '2.4rem' }}
+                  placeholder="Mark Lester"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem 0.65rem 2.4rem',
+                    borderRadius: '12px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.875rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
+          <div>
+            <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+              Email Address
+            </label>
             <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--text-dim)' }} />
+              <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               <input
                 type="email"
-                className="form-input"
-                placeholder="name@company.com"
-                style={{ paddingLeft: '2.4rem' }}
+                placeholder="lester@example.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.85rem 0.65rem 2.4rem',
+                  borderRadius: '12px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.875rem',
+                  color: '#0f172a',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
+          <div>
+            <label style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '0.35rem' }}>
+              Password
+            </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--text-dim)' }} />
+              <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
               <input
                 type="password"
-                className="form-input"
                 placeholder="••••••••"
-                style={{ paddingLeft: '2.4rem' }}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.85rem 0.65rem 2.4rem',
+                  borderRadius: '12px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.875rem',
+                  color: '#0f172a',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className="btn btn-primary"
             disabled={isSubmitting}
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.8rem' }}
+            style={{
+              width: '100%',
+              marginTop: '0.5rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '12px',
+              background: '#6d28d9',
+              border: 'none',
+              color: '#ffffff',
+              fontSize: '0.9rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 14px rgba(109, 40, 217, 0.3)',
+              opacity: isSubmitting ? 0.7 : 1
+            }}
           >
             {isSubmitting ? (
               'Processing...'
             ) : authModalMode === 'login' ? (
-              <> <LogIn size={18} /> Log In to TaskFlow </>
+              <> <LogIn size={18} /> Sign In to Workspace </>
             ) : (
               <> <UserPlus size={18} /> Register Account </>
             )}
